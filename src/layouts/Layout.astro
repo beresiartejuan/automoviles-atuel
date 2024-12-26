@@ -1,14 +1,32 @@
+---
+import "normalize.css";
+import "../styles/main.scss";
+import Head from "@/components/Head.astro";
+import Footer from "@/components/Footer.astro";
+
+import { SITEWEB_DESCRIPTION, SITEWEB_TITLE } from "../config";
+import Navbar from "@/components/Navbar.astro";
+
+interface Props {
+	title?: string;
+	description?: string;
+}
+
+const { title, description } = Astro.props;
+---
+
 <!doctype html>
-<html lang="en">
+<html lang="es">
 	<head>
-		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro Basics</title>
+		<Head
+			title={title ?? SITEWEB_TITLE}
+			description={description ?? SITEWEB_DESCRIPTION}
+		/>
 	</head>
 	<body>
+		<Navbar />
 		<slot />
+		<Footer />
 	</body>
 </html>
 

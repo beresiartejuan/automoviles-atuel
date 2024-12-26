@@ -1,0 +1,57 @@
+---
+import type { ICarInfo } from "@/db/models";
+
+interface Props {
+    info: ICarInfo;
+}
+
+const { info } = Astro.props;
+---
+
+<section class="car-tech">
+    <h2>Ficha Técnica</h2>
+    <ul>
+        <li><strong>Kilometraje:</strong> {info.mileage}</li>
+        <li><strong>Tracción:</strong> {info.traction}</li>
+        <li>
+            <strong>Tipo de Combustible:</strong>
+            {info.fuel_type}
+        </li>
+        <li>
+            <strong>Transmisión:</strong>
+            {info.transmission_type}
+        </li>
+        <li>
+            <strong>Capacidad del Tanque:</strong>
+            {info.fuel_tank_capacity_liters} L
+        </li>
+        <li><strong>Tipo de Motor:</strong> {info.engine_type}</li>
+    </ul>
+</section>
+
+<style>
+    .car-tech {
+        margin-bottom: 20px;
+    }
+
+    .car-tech h2 {
+        font-size: 1.5rem;
+        color: #333;
+        margin-bottom: 10px;
+    }
+
+    ul {
+        list-style-type: none;
+        padding: 0;
+    }
+
+    li {
+        margin-bottom: 8px;
+        font-size: 1rem;
+        color: #666;
+    }
+
+    strong {
+        color: #333;
+    }
+</style>

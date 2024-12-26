@@ -1,0 +1,131 @@
+---
+import type { ICar } from "@db/models";
+import { first_photo_by_car_id } from "@/db/cars";
+
+interface Props extends ICar {
+    loadImage?: boolean;
+}
+
+const { props } = Astro;
+
+const photo =
+    props.loadImage !== false ? await first_photo_by_car_id(props.id) : null;
+---
+
+<div
+    class="card"
+    role="article"
+    car-id={props.id}
+    aria-labelledby={`card-title-${props.id}`}
+>
+    {
+        photo ? (
+            <div class="card__image">
+                <img
+                    src={photo?.photo_url}
+                    alt={`Imagen de ${props.name}, modelo ${props.model}`}
+                    loading="lazy"
+                />
+            </div>
+        ) : (
+            ""
+        )
+    }
+
+    <div class="card__info">
+        <h4 id={`card-title-${props.id}`} class="card__info__title">
+            {props.name}
+        </h4>
+        <p class="card__info__details">
+            <span class="card__info__model">{props.model} | {props.year}</span>
+            <span class="card__info__year-mileage">
+                {props.is_used ? "" : "0km"}
+            </span>
+        </p>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        document.querySelectorAll("div.card[car-id]").forEach((card) => {
+            if (!card.getAttribute("car-id")) return;
+
+            const car_id = card.getAttribute("car-id")!;
+
+            card.addEventListener("click", (e) => {
+                e.preventDefault();
+                window.location.href = `/autos/${car_id}`;
+            });
+        });
+    });
+</script>
+
+<style lang="scss">
+    :root {
+        --color-bg: #fff;
+        --color-shadow: rgba(0, 0, 0, 0.2);
+        --color-shadow-hover: #00000073;
+        --color-text: #333;
+        --color-muted: #888;
+        --color-button: #222425;
+        --color-button-hover: #0056b3;
+        --border-radius: 10px;
+        --spacing: 10px;
+    }
+
+    .card {
+        font-family: "Kanit", sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        background-color: var(--color-bg);
+        border-radius: var(--border-radius);
+        box-shadow: 0 4px 10px var(--color-shadow);
+        max-width: 18rem;
+        overflow: hidden;
+        // cursor: pointer;
+        transition:
+            transform 0.3s ease,
+            box-shadow 0.3s ease;
+
+        &:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px var(--color-shadow-hover);
+        }
+
+        &__image img {
+            aspect-ratio: 1/1;
+            width: 100%;
+            height: auto;
+            object-fit: cover;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        &__info {
+            padding: var(--spacing);
+            width: 100%;
+            text-align: center;
+
+            &__title {
+                font-size: 1.3rem;
+                font-weight: 600;
+                color: var(--color-text);
+                margin: var(--spacing) 0;
+            }
+
+            &__details {
+                font-size: 1rem;
+                color: var(--color-muted);
+                margin-bottom: var(--spacing);
+                font-weight: 300;
+                text-align: left;
+                padding-left: 5%;
+
+                span {
+                    display: block;
+                    line-height: 1.4rem;
+                }
+            }
+        }
+    }
+</style>

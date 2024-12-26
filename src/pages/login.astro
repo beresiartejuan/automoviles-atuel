@@ -1,0 +1,169 @@
+---
+import Navbar from "../components/Navbar.astro";
+---
+
+<!doctype html>
+<html lang="es">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Login</title>
+    </head>
+    <body>
+        <Navbar />
+        <div class="login-container">
+            <form class="login-form" action="/login" method="POST">
+                <h1>Iniciar Sesión</h1>
+                <div class="form-group">
+                    <label for="username">Usuario</label>
+                    <input
+                        type="text"
+                        id="username"
+                        name="username"
+                        placeholder="Tu usuario"
+                        required
+                    />
+                </div>
+                <div class="form-group">
+                    <label for="password">Contraseña</label>
+                    <input
+                        type="password"
+                        id="password"
+                        name="password"
+                        placeholder="Tu contraseña"
+                        required
+                    />
+                </div>
+                <button type="submit" class="login-button">Ingresar</button>
+                <p class="response-message" id="responseMessage"></p>
+            </form>
+        </div>
+    </body>
+</html>
+
+<script>
+    document
+        .querySelector("form.login-form")!
+        .addEventListener("submit", async (event) => {
+            event.preventDefault();
+
+            const form = event.target as HTMLFormElement;
+            const formData = new FormData(form);
+            const payload = {
+                username: formData.get("username"),
+                password: formData.get("password"),
+            };
+
+            const responseMessage = document.getElementById("responseMessage")!;
+            responseMessage.textContent = "Procesando...";
+            responseMessage.style.color = "blue";
+
+            try {
+                const response = await fetch("/api/login", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload),
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    responseMessage.textContent =
+                        data.message || "Inicio de sesión exitoso";
+                    responseMessage.style.color = "green";
+
+                    setTimeout(() => {
+                        window.location.href = "/panel";
+                    }, 500);
+                } else {
+                    const errorData = await response.json();
+                    responseMessage.textContent =
+                        errorData.message || "Error en el inicio de sesión";
+                    responseMessage.style.color = "red";
+                }
+            } catch (error) {
+                responseMessage.textContent =
+                    "Error de red: No se pudo conectar al servidor";
+                responseMessage.style.color = "red";
+            }
+        });
+</script>
+
+<style lang="scss">
+    body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        background-color: #f0f2f5;
+    }
+
+    .login-container {
+        background: #ffffff;
+        padding: 2rem;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        width: 100%;
+        max-width: 400px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+    }
+
+    .login-form {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    h1 {
+        font-size: 2rem;
+        margin-bottom: 1.5rem;
+        color: #333;
+        text-align: center;
+    }
+
+    .form-group {
+        margin-bottom: 1rem;
+        width: 100%;
+    }
+
+    label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: #555;
+        font-weight: bold;
+    }
+
+    input {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 1rem;
+    }
+
+    input:focus {
+        outline: none;
+        border-color: #007bff;
+        box-shadow: 0 0 3px rgba(0, 123, 255, 0.5);
+    }
+
+    .login-button {
+        background-color: #007bff;
+        color: #fff;
+        padding: 0.75rem;
+        border: none;
+        border-radius: 4px;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: background-color 0.3s;
+        margin-top: 1rem;
+    }
+
+    .login-button:hover {
+        background-color: #0056b3;
+    }
+</style>

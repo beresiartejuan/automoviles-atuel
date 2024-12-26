@@ -1,0 +1,116 @@
+---
+import CardList from "@/components/CardList.astro";
+import Layout from "@/layouts/Layout.astro";
+import { get_cars } from "@db/cars";
+
+if (!Astro.locals.user) {
+    return Astro.redirect("/login");
+}
+
+const user = Astro.locals.user;
+
+const cars = await get_cars();
+---
+
+<Layout>
+    <main class="panel">
+        <h1>Bienvenido, {user.name} 👋</h1>
+        <section class="panel-content">
+            <button id="logout">Cerrar sesión</button>
+            <button id="register-new-vehicle"
+                >Registrar un nuevo vehículo</button
+            >
+            <div id="response-box" style="margin-top: 20px;"></div>
+        </section>
+        <CardList cars={cars} />
+    </main>
+
+    <script>
+        // Manejo de cierre de sesión
+        document
+            .querySelector("button#logout")
+            ?.addEventListener("click", function handleLogout() {
+                window.location.href = "/api/logout";
+            });
+
+        // Botón para registrar un nuevo vehículo
+        document
+            .querySelector("button#register-new-vehicle")
+            ?.addEventListener("click", async function handleRegister() {
+                const responseBox = document.querySelector("#response-box")!;
+                responseBox.textContent = "Procesando...";
+
+                try {
+                    // Realizar la petición POST
+                    const response = await fetch("/api/autos/nuevo", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({}), // Puedes incluir datos aquí si es necesario
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.link) {
+                            responseBox.innerHTML = `
+                                <div style="padding: 10px; background: #e0f7e9; border: 1px solid #a8e6a2; border-radius: 4px;">
+                                    <strong>¡Éxito!</strong> Nuevo vehículo registrado. Visita: 
+                                    <a href="${data.link}" target="_blank">${data.link}</a>
+                                </div>`;
+                        } else {
+                            responseBox.innerHTML = `
+                                <div style="padding: 10px; background: rgba(255, 179, 0, .3); border: 1px solid #8A6E00; border-radius: 4px;">
+                                    <strong>¡Éxito!</strong> Nuevo vehículo registrado, pero no se recibió un enlace.
+                                </div>`;
+                        }
+                    } else {
+                        responseBox.innerHTML = `
+                            <div style="padding: 10px; background: #fce4e4; border: 1px solid #f5c6cb; border-radius: 4px;">
+                                <strong>Error:</strong> No se pudo registrar el vehículo. Inténtalo de nuevo.
+                            </div>`;
+                    }
+                } catch (error) {
+                    console.error("Error en la solicitud:", error);
+                    responseBox.innerHTML = `
+                        <div style="padding: 10px; background: #fce4e4; border: 1px solid #f5c6cb; border-radius: 4px;">
+                            <strong>Error:</strong> Ocurrió un problema al procesar la solicitud.
+                        </div>`;
+                }
+            });
+    </script>
+</Layout>
+
+<style lang="scss">
+    .panel {
+        margin: 10vw auto;
+        padding: 20px;
+        text-align: center;
+        font-family: Arial, sans-serif;
+    }
+
+    .panel-content {
+        margin-top: 20px;
+        padding: 10px;
+        background: transparent;
+        border-radius: 8px;
+    }
+
+    button {
+        background: #007bff;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        font-size: 16px;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background 0.3s;
+
+        margin-left: 4px;
+        margin-top: 4px;
+    }
+
+    button:hover {
+        background: #0056b3;
+    }
+</style>

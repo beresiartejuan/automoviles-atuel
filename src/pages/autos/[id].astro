@@ -1,0 +1,147 @@
+---
+import Layout from "@layouts/Layout.astro";
+import { get_all_by_car_id } from "@db/cars";
+import CardHeader from "@ui/CardHeader.astro";
+import CardInfo from "@ui/CardInfo.astro";
+import CardTech from "@ui/CardTech.astro";
+import CardPhotos from "@ui/CardPhotos.astro";
+
+const user = Astro.locals.user;
+
+const { id } = Astro.params;
+
+if (!id) {
+    return Astro.redirect("/");
+}
+
+const result = await get_all_by_car_id(id);
+
+if (!result) {
+    return Astro.redirect("/");
+}
+
+const car = result.car;
+const carInfo = result.info;
+const photos = result.photos;
+
+const tags = [
+    {
+        condition: carInfo.parking_assist,
+        label: "Asistente de Estacionamiento",
+    },
+    { condition: carInfo.push_button_start, label: "Botón de Arranque" },
+    { condition: carInfo.remote_locking, label: "Cierre a Distancia" },
+    { condition: carInfo.connectivity, label: "Conectividad" },
+    { condition: carInfo.satellite_navigation, label: "Navegador Satelital" },
+    { condition: carInfo.screens, label: "Pantallas" },
+    { condition: carInfo.panoramic_roof, label: "Techo Panorámico" },
+    { condition: carInfo.air_conditioning, label: "Aire Acondicionado" },
+    { condition: carInfo.fog_lights, label: "Faros Antiniebla" },
+    { condition: carInfo.bluetooth, label: "Bluetooth" },
+].filter((item) => item.condition);
+---
+
+<Layout>
+    <section class="car-detail">
+        <CardHeader name={car.name} year={car.year} photo={photos[0]} />
+        <CardInfo car={car} />
+        <CardTech info={carInfo} />
+
+        <section class="car-features">
+            <h2>Características</h2>
+            <ul>
+                {tags.map((item) => <li>{item.label}</li>)}
+            </ul>
+        </section>
+
+        <CardPhotos name={car.name} photos={photos} />
+    </section>
+    {
+        user ? (
+            <a class="edit-button" href={`/autos/edit?id=${car.id}`}>
+                ✏️
+            </a>
+        ) : (
+            ""
+        )
+    }
+</Layout>
+
+<style>
+    .car-detail {
+        font-family: "Arial", sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #f9f9f9;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        margin-top: 10vh;
+    }
+
+    .car-features {
+        margin-bottom: 20px;
+    }
+
+    .car-features h3 {
+        font-size: 1.5rem;
+        color: #333;
+        margin-bottom: 10px;
+    }
+
+    .car-features ul {
+        padding: 0;
+        list-style-type: none;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .car-features li {
+        background-color: #e0e0e0;
+        padding: 5px 10px;
+        border-radius: 4px;
+        font-size: 0.9rem;
+        color: #333;
+    }
+
+    @media (max-width: 768px) {
+        .car-detail {
+            padding: 15px;
+        }
+    }
+
+    .edit-button {
+        text-decoration: none;
+        position: fixed;
+        bottom: 2rem; /* Espacio desde el borde inferior */
+        right: 2rem; /* Espacio desde el borde derecho */
+        background-color: #e4e4e4;
+        color: #fff; /* Color del texto (blanco) */
+        font-size: 1.5rem; /* Tamaño del emoji */
+        width: 3.5rem; /* Ancho del botón */
+        height: 3.5rem; /* Alto del botón */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border-radius: 50%; /* Hace el botón circular */
+        box-shadow: 0px 0px 10px rgba(0, 0, 0, 1); /* Sombra suave */
+        cursor: pointer; /* Cambia el cursor a mano al pasar el mouse */
+        transition:
+            transform 0.3s ease,
+            box-shadow 0.3s ease;
+        z-index: 1000; /* Asegura que esté sobre otros elementos */
+    }
+
+    .edit-button:hover {
+        transform: scale(
+            1.1
+        ); /* Aumenta ligeramente el tamaño al pasar el mouse */
+        box-shadow: 0 8px 12px rgba(0, 0, 0, 0.3); /* Sombra más intensa al pasar el mouse */
+    }
+
+    .edit-button:active {
+        transform: scale(0.95); /* Reduce el tamaño al hacer clic */
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Sombra más pequeña */
+    }
+</style>

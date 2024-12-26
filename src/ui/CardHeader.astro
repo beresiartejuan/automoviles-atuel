@@ -1,0 +1,36 @@
+---
+import type { ICar, ICarPhoto } from "@/db/models";
+
+interface Props {
+    name: ICar["name"];
+    year: ICar["year"];
+    photo: ICarPhoto;
+}
+
+const { name, year, photo } = Astro.props;
+---
+
+<div class="car-header">
+    <h1>{name} ({year})</h1>
+    <img src={photo.photo_url} alt={`Foto de ${name}`} class="car-image" />
+</div>
+
+<style>
+    .car-header {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .car-header h1 {
+        font-size: 3rem;
+        color: #333;
+        margin-bottom: 10px;
+    }
+
+    .car-image {
+        width: 100%;
+        max-width: 400px;
+        margin-top: 10px;
+        border-radius: 8px;
+    }
+</style>

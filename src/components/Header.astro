@@ -1,0 +1,54 @@
+---
+import Title from "@ui/Title.astro";
+---
+
+<header>
+    <div class="banner">
+        <Title tag="h1" variant="primary"
+            >Grandes oportunidades, cerca de casa.</Title
+        >
+        <a href="">Visitanos</a>
+    </div>
+</header>
+
+<style lang="scss">
+    header {
+        background: url("/banner.png");
+        background-position: center;
+        background-size: cover;
+        height: 60vh;
+        backdrop-filter: blur(100px);
+        max-height: 60vh;
+    }
+
+    header .banner {
+        font-family: "Popins", serif;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        gap: 1rem;
+        justify-content: center;
+        align-items: flex-start;
+        padding-left: 10vw;
+
+        a {
+            color: aliceblue;
+            background-color: rgba(240, 248, 255, 0.2);
+            font-size: 1.2rem;
+            border: aliceblue solid 1px;
+            border-radius: 10px;
+            padding: 0.8rem 2rem;
+            text-decoration: none;
+            transition: background-color 350ms;
+
+            &:hover {
+                background-color: rgba(240, 248, 255, 0.3);
+                transform: scale(1.05);
+            }
+
+            @media screen and (max-width: 750px) {
+                font-size: 1rem;
+            }
+        }
+    }
+</style>
