@@ -3,8 +3,7 @@ import { turso } from "@db/connection";
 
 export const prerender = false;
 
-// API_KEY para ImgBB
-const API_KEY = "ad59d389c013088adf430cb25c889646";
+const API_KEY = import.meta.env.IMGBB_KEY;
 
 export const POST: APIRoute = async ({ request, url, cookies }) => {
     if (!cookies.has("authenticated")) {
