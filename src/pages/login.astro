@@ -11,81 +11,95 @@ import Navbar from "../components/Navbar.astro";
     </head>
     <body>
         <Navbar />
-        <div class="login-container">
-            <form class="login-form" action="/login" method="POST">
-                <h1>Iniciar Sesión</h1>
-                <div class="form-group">
-                    <label for="username">Usuario</label>
-                    <input
-                        type="text"
-                        id="username"
-                        name="username"
-                        placeholder="Tu usuario"
-                        required
-                    />
-                </div>
-                <div class="form-group">
-                    <label for="password">Contraseña</label>
-                    <input
-                        type="password"
-                        id="password"
-                        name="password"
-                        placeholder="Tu contraseña"
-                        required
-                    />
-                </div>
-                <button type="submit" class="login-button">Ingresar</button>
-                <p class="response-message" id="responseMessage"></p>
-            </form>
-        </div>
+        <form class="login" action="/login" method="POST">
+            <h1>Iniciar Sesión</h1>
+            <div class="form-group">
+                <label for="username">Usuario</label>
+                <input
+                    type="text"
+                    id="username"
+                    name="username"
+                    placeholder="Tu usuario"
+                    required
+                />
+            </div>
+            <div class="form-group">
+                <label for="password">Contraseña</label>
+                <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    placeholder="Tu contraseña"
+                    required
+                />
+            </div>
+            <button type="submit" class="login-button">Ingresar</button>
+            <p class="response-message" id="responseMessage"></p>
+        </form>
     </body>
 </html>
 
 <script>
-    document
-        .querySelector("form.login-form")!
-        .addEventListener("submit", async (event) => {
-            event.preventDefault();
+    const login: HTMLFormElement | null = document.querySelector("form.login");
+    const responseMessage = document.getElementById("responseMessage")!;
 
-            const form = event.target as HTMLFormElement;
-            const formData = new FormData(form);
-            const payload = {
-                username: formData.get("username"),
-                password: formData.get("password"),
-            };
+    document.addEventListener("DOMContentLoaded", () => {
+        if (!login) {
+            alert("La función de login no esta disponible por ahora");
+            return;
+        }
 
-            const responseMessage = document.getElementById("responseMessage")!;
-            responseMessage.textContent = "Procesando...";
-            responseMessage.style.color = "blue";
-
+        async function handleLogin(credentials: {
+            username: string;
+            password: string;
+        }): Promise<{ message: string; ok: boolean }> {
             try {
                 const response = await fetch("/api/login", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(payload),
+                    body: JSON.stringify(credentials),
                 });
 
-                if (response.ok) {
-                    const data = await response.json();
-                    responseMessage.textContent =
-                        data.message || "Inicio de sesión exitoso";
-                    responseMessage.style.color = "green";
+                const data = await response.json();
 
-                    setTimeout(() => {
-                        window.location.href = "/panel";
-                    }, 500);
-                } else {
-                    const errorData = await response.json();
-                    responseMessage.textContent =
-                        errorData.message || "Error en el inicio de sesión";
-                    responseMessage.style.color = "red";
-                }
+                return {
+                    ok: response.ok,
+                    message: data.message as string,
+                };
             } catch (error) {
-                responseMessage.textContent =
-                    "Error de red: No se pudo conectar al servidor";
-                responseMessage.style.color = "red";
+                console.log(error);
+                return {
+                    message: "Error en el servidor",
+                    ok: false,
+                };
+            }
+        }
+
+        login.addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const data = new FormData(e.target as HTMLFormElement);
+
+            const payload = {
+                username: data.get("username")!.toString(),
+                password: data.get("password")!.toString(),
+            };
+
+            responseMessage.innerHTML = "Procesando...";
+            responseMessage.style.color = "blue";
+
+            const response = await handleLogin(payload);
+
+            responseMessage.textContent = response.message;
+            responseMessage.style.color = response.ok ? "green" : "red";
+
+            if (response.ok) {
+                setTimeout(() => {
+                    window.location.href = "/panel";
+                }, 500);
             }
         });
+    });
 </script>
 
 <style lang="scss">
@@ -99,23 +113,16 @@ import Navbar from "../components/Navbar.astro";
         background-color: #f0f2f5;
     }
 
-    .login-container {
-        background: #ffffff;
-        padding: 2rem;
-        border-radius: 8px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    form.login {
         width: 100%;
         max-width: 400px;
         display: flex;
-        justify-content: center;
-        align-items: center;
         flex-direction: column;
-    }
+        padding: 0 0.75rem;
 
-    .login-form {
-        width: 100%;
-        display: flex;
-        flex-direction: column;
+        * {
+            box-sizing: border-box;
+        }
     }
 
     h1 {
@@ -123,10 +130,11 @@ import Navbar from "../components/Navbar.astro";
         margin-bottom: 1.5rem;
         color: #333;
         text-align: center;
+        text-decoration: underline;
     }
 
     .form-group {
-        margin-bottom: 1rem;
+        margin-bottom: 1.5rem;
         width: 100%;
     }
 
@@ -138,29 +146,29 @@ import Navbar from "../components/Navbar.astro";
     }
 
     input {
-        width: 100%;
         padding: 0.75rem;
         border: 1px solid #ccc;
         border-radius: 4px;
         font-size: 1rem;
+        width: 100%;
     }
 
     input:focus {
         outline: none;
         border-color: #007bff;
-        box-shadow: 0 0 3px rgba(0, 123, 255, 0.5);
+        box-shadow: 0 0 3px rgba(0, 123, 255, 1);
     }
 
     .login-button {
         background-color: #007bff;
         color: #fff;
-        padding: 0.75rem;
         border: none;
         border-radius: 4px;
-        font-size: 1rem;
         cursor: pointer;
         transition: background-color 0.3s;
-        margin-top: 1rem;
+        font-size: 1.1rem;
+        padding: 0.75rem;
+        min-width: 100%;
     }
 
     .login-button:hover {
