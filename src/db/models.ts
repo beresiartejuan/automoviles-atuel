@@ -33,7 +33,7 @@ export interface ICarInfo {
     traction: string;
     fuel_type: string;
     transmission_type: string;
-    fuel_tank_capacity_liters: number;
+    fuel_tank_capacity_liters: number | null;
     engine_type: string;
     parking_assist: boolean;
     push_button_start: boolean;

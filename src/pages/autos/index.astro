@@ -2,19 +2,14 @@
 import Layout from "@/layouts/Layout.astro";
 import SearchBar from "@/components/Search.astro";
 import Header from "@/components/Header.astro";
-import { get_published_cars } from "@db/cars";
+import { search_published_cars } from "@db/cars";
 import CardList from "@/components/CardList.astro";
 
 const url = new URL(Astro.url);
 const searchTerm = url.searchParams.get("q")?.toLowerCase() || "";
 const status = url.searchParams.has("nuevo");
 
-const cars = await get_published_cars(
-    `is_used = ? 
-    AND (LOWER(name) LIKE ? OR LOWER(model) LIKE ?)
-    ORDER BY name ASC`,
-    [status ? 0 : 1, `%${searchTerm}%`, `%${searchTerm}%`],
-);
+const cars = await search_published_cars(searchTerm, status ? false : true);
 ---
 
 <Layout>
