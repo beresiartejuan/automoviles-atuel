@@ -1,9 +1,8 @@
 import type { APIRoute } from 'astro';
-import { getAdmins } from '@db/admins';
-import { compare } from "bcrypt";
+import { verify_admin } from '@db/admins';
 import jwt from "jsonwebtoken";
-import { customResponse, respondWithJson } from "@/helper/response";
-import { PRIVATE_KEY } from "astro:env/server";
+import { PRIVATE_KEY } from 'astro:env/server';
+import { respondWithJson } from "@/helper/response";
 
 export const prerender = false;
 
@@ -19,13 +18,9 @@ export const POST: APIRoute = async ({ request, cookies }) => {
         return respondWithJson({ message: "Por favor, ingrese una contraseña." }, 404);
     };
 
-    const admins = await getAdmins();
+    const user = await verify_admin(body.username, body.password);
 
-    const user = admins.find(admin => admin.name === body.username);
-
-    const isCorrectPassword = await compare(body.password, user ? user.password : "");
-
-    if (!user || !isCorrectPassword) {
+    if (!user) {
         return respondWithJson({ message: "Usuario o contraseña incorrectas." }, 401);
     }
 

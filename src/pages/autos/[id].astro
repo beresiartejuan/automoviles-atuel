@@ -22,6 +22,11 @@ if (!result) {
 
 const car = result.car;
 const carInfo = result.info;
+
+if (!carInfo) {
+    return Astro.redirect("/");
+}
+
 const photos = result.photos;
 
 const tags = [

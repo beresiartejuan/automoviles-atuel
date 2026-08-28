@@ -1,30 +1,26 @@
 import type { APIRoute } from "astro";
-import { turso } from "@db/connection";
+import { update_car_by_id } from "@db/cars";
 
 export const prerender = false;
 
-export const POST: APIRoute = async ({ request, cookies, url }) => {
+export const POST: APIRoute = async ({ request, url, cookies }) => {
     if (!cookies.has("authenticated")) return new Response(JSON.stringify({
         message: "Token is required"
     }), { status: 401 });
 
     const car_id = url.searchParams.get("id");
+    if (!car_id) return new Response(JSON.stringify({ message: "Car id is required" }), { status: 400 });
+
     const formData = await request.formData();
 
-    const name = formData.get("name")!.toString();
-    const model = formData.get("model")!.toString();
-    const description = formData.get("description")!.toString();
-    const year = parseInt(formData.get("year")!.toString());
-    const is_used = formData.has("is_used") ? 1 : 0;
-    const published = formData.has("published") ? 1 : 0;
-
     try {
-        await turso.execute({
-            sql: `
-			UPDATE cars 
-			SET name = ?, model = ?, description = ?, year = ?, is_used = ?, published = ?, updated_at = datetime('now') 
-			WHERE id = ?`,
-            args: [name, model, description, year, is_used, published, car_id],
+        await update_car_by_id(car_id, {
+            name: formData.get("name")!.toString(),
+            model: formData.get("model")!.toString(),
+            description: formData.get("description")!.toString(),
+            year: parseInt(formData.get("year")!.toString()),
+            is_used: formData.has("is_used"),
+            published: formData.has("published"),
         });
 
         return new Response("Información del auto actualizada correctamente", { status: 200 });
