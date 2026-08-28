@@ -1,10 +1,7 @@
 ---
 import Layout from "@layouts/Layout.astro";
 import { get_full_car_by_id } from "@db/cars";
-import CardHeader from "@ui/CardHeader.astro";
-import CardInfo from "@ui/CardInfo.astro";
 import CardTech from "@ui/CardTech.astro";
-import CardPhotos from "@ui/CardPhotos.astro";
 
 const user = Astro.locals.user;
 
@@ -28,12 +25,22 @@ if (!carInfo) {
 }
 
 const photos = result.photos;
+const sortedPhotos = [...photos].sort((a, b) => Number(b.is_main) - Number(a.is_main));
+const mainPhoto = sortedPhotos[0];
+const thumbnails = sortedPhotos.slice(0, 5);
 
-const tags = [
-    {
-        condition: carInfo.parking_assist,
-        label: "Asistente de Estacionamiento",
-    },
+const badgeText = car.is_used ? "USADO" : "0KM";
+const badgeClasses = car.is_used
+    ? "bg-text-secondary/90 text-white"
+    : "bg-brand-500 text-white";
+
+const message = encodeURIComponent(
+    `Hola! Me interesa el ${car.name} ${car.model} ${car.year} que vi en la web. ¿Sigue disponible?`
+);
+const whatsappHref = `https://wa.me/5492625448697?text=${message}`;
+
+const features = [
+    { condition: carInfo.parking_assist, label: "Asistente de Estacionamiento" },
     { condition: carInfo.push_button_start, label: "Botón de Arranque" },
     { condition: carInfo.remote_locking, label: "Cierre a Distancia" },
     { condition: carInfo.connectivity, label: "Conectividad" },
@@ -46,107 +53,248 @@ const tags = [
 ].filter((item) => item.condition);
 ---
 
-<Layout>
-    <section class="car-detail">
-        <CardHeader name={car.name} year={car.year} photo={photos[0]} />
-        <CardInfo car={car} />
-        <CardTech info={carInfo} />
+<Layout title={`${car.name} ${car.model} ${car.year} | Automóviles Atuel`} showFab={false}>
+    <main class="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+        <nav aria-label="Breadcrumb" class="mb-4">
+            <ol class="flex flex-wrap items-center gap-2 font-sans text-sm text-text-secondary">
+                <li>
+                    <a href="/" class="transition hover:text-brand-500">Inicio</a>
+                </li>
+                <li aria-hidden="true">/</li>
+                <li>
+                    <a href="/autos" class="transition hover:text-brand-500">Autos</a>
+                </li>
+                <li aria-hidden="true">/</li>
+                <li class="font-medium text-text">{car.name} {car.model} {car.year}</li>
+            </ol>
+        </nav>
 
-        <section class="car-features">
-            <h2>Características</h2>
-            <ul>
-                {tags.map((item) => <li>{item.label}</li>)}
-            </ul>
-        </section>
+        <div class="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_360px]">
+            <div class="space-y-8">
+                <div class="flex flex-wrap items-start justify-between gap-4">
+                    <h1 class="font-display text-3xl font-bold text-text sm:text-4xl">
+                        {car.name} {car.model} {car.year}
+                    </h1>
+                    <span
+                        class={`rounded-radius-pill px-3 py-1 font-display text-xs font-semibold tracking-wide ${badgeClasses}`}
+                    >
+                        {badgeText}
+                    </span>
+                </div>
 
-        <CardPhotos name={car.name} photos={photos} />
-    </section>
+                <div class="space-y-3">
+                    {
+                        mainPhoto ? (
+                            <img
+                                src={mainPhoto.photo_url}
+                                alt={`Foto principal de ${car.name} ${car.model} ${car.year}`}
+                                class="w-full rounded-radius-card object-cover shadow-card"
+                                style="aspect-ratio: 16/10;"
+                                loading="eager"
+                            />
+                        ) : (
+                            <div class="flex w-full flex-col items-center justify-center rounded-radius-card bg-gray-200 object-cover text-text-secondary"
+                                style="aspect-ratio: 16/10;"
+                            >
+                                <svg
+                                    class="mb-2 h-12 w-12"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="1.5"
+                                >
+                                    <path d="M3 8l7.89 4.65a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                </svg>
+                                <span class="font-sans text-sm">Sin fotos disponibles</span>
+                            </div>
+                        )
+                    }
+
+                    {
+                        thumbnails.length > 1 && (
+                            <div class="grid grid-cols-4 gap-2 sm:grid-cols-5">
+                                {thumbnails.map((photo, idx) => (
+                                    <img
+                                        src={photo.photo_url}
+                                        alt={`Miniatura ${idx + 1} de ${car.name} ${car.model}`}
+                                        class={`aspect-[16/10] w-full cursor-pointer rounded-radius-card object-cover transition hover:opacity-80 ${photo.id === mainPhoto?.id ? "ring-2 ring-brand-500" : ""}`}
+                                        loading="lazy"
+                                    />
+                                ))}
+                            </div>
+                        )
+                    }
+                </div>
+
+                {
+                    car.description && (
+                        <section class="rounded-radius-card border border-border bg-surface p-6 shadow-sm">
+                            <h2 class="font-display text-xl font-semibold text-text">
+                                Descripción
+                            </h2>
+                            <p class="mt-2 whitespace-pre-line font-sans text-text-secondary">
+                                {car.description}
+                            </p>
+                        </section>
+                    )
+                }
+
+                <section class="rounded-radius-card border border-border bg-surface p-6 shadow-sm">
+                    <h2 class="mb-3 font-display text-xl font-semibold text-text">
+                        Ficha técnica
+                    </h2>
+                    <CardTech info={carInfo} />
+                </section>
+
+                {
+                    features.length > 0 && (
+                        <section class="rounded-radius-card border border-border bg-surface p-6 shadow-sm">
+                            <h2 class="mb-3 font-display text-xl font-semibold text-text">
+                                Características
+                            </h2>
+                            <ul class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                                {features.map((item) => (
+                                    <li class="flex items-center gap-2 font-sans text-sm text-text-secondary"
+                                    >
+                                        <svg
+                                            class="h-5 w-5 flex-shrink-0 text-success"
+                                            viewBox="0 0 20 20"
+                                            fill="currentColor"
+                                        >
+                                            <path
+                                                fill-rule="evenodd"
+                                                d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z"
+                                                clip-rule="evenodd"
+                                            />
+                                        </svg>
+                                        {item.label}
+                                    </li>
+                                ))}
+                            </ul>
+                        </section>
+                    )
+                }
+            </div>
+
+            <aside class="space-y-4">
+                <div class="sticky top-24 rounded-radius-card border border-border bg-surface p-6 shadow-card">
+                    <a
+                        href={whatsappHref}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="flex w-full items-center justify-center gap-2 rounded-radius-card bg-whatsapp px-5 py-3 font-sans font-semibold text-white transition hover:bg-whatsapp-text"
+                    >
+                        <svg
+                            class="h-5 w-5"
+                            fill="currentColor"
+                            viewBox="0 0 32 32"
+                            xmlns="http://www.w3.org/2000/svg"
+                        >
+                            <path
+                                d="M26.576 5.363c-2.69-2.69-6.406-4.354-10.511-4.354-8.209 0-14.865 6.655-14.865 14.865 0 2.732 0.737 5.291 2.022 7.491l-0.038-0.070-2.109 7.702 7.879-2.067c2.051 1.139 4.498 1.809 7.102 1.809h0.006c8.209-0.003 14.862-6.659 14.862-14.868 0-4.103-1.662-7.817-4.349-10.507l0 0zM16.062 28.228h-0.005c-0 0-0.001 0-0.001 0-2.319 0-4.489-0.64-6.342-1.753l0.056 0.031-0.451-0.267-4.675 1.227 1.247-4.559-0.294-0.467c-1.185-1.862-1.889-4.131-1.889-6.565 0-6.822 5.531-12.353 12.353-12.353s12.353 5.531 12.353 12.353c0 6.822-5.53 12.353-12.353 12.353h-0zM22.838 18.977c-0.371-0.186-2.197-1.083-2.537-1.208-0.341-0.124-0.589-0.185-0.837 0.187-0.246 0.371-0.958 1.207-1.175 1.455-0.216 0.249-0.434 0.279-0.805 0.094-1.15-0.466-2.138-1.087-2.997-1.852l0.010 0.009c-0.799-0.74-1.484-1.587-2.037-2.521l-0.028-0.052c-0.216-0.371-0.023-0.572 0.162-0.757 0.167-0.166 0.372-0.434 0.557-0.65 0.146-0.179 0.271-0.384 0.366-0.604l0.006-0.017c0.043-0.087 0.068-0.188 0.068-0.296 0-0.131-0.037-0.253-0.101-0.357l0.002 0.003c-0.094-0.186-0.836-2.014-1.145-2.758-0.302-0.724-0.609-0.625-0.836-0.637-0.216-0.010-0.464-0.012-0.712-0.012-0.395 0.010-0.746 0.188-0.988 0.463l-0.001 0.002c-0.802 0.761-1.3 1.834-1.3 3.023 0 0.026 0 0.053 0.001 0.079l-0-0.004c0.131 1.467 0.681 2.784 1.527 3.857l-0.012-0.015c1.604 2.379 3.742 4.282 6.251 5.564l0.094 0.043c0.548 0.248 1.25 0.513 1.968 0.74l0.149 0.041c0.442 0.14 0.951 0.221 1.479 0.221 0.303 0 0.601-0.027 0.889-0.078l-0.031 0.004c1.069-0.223 1.956-0.868 2.497-1.749l0.009-0.017c0.165-0.366 0.261-0.793 0.261-1.242 0-0.185-0.016-0.366-0.047-0.542l0.003 0.019c-0.092-0.155-0.34-0.247-0.712-0.434z"
+                            >
+                            </path>
+                        </svg>
+                        Consultar por este auto
+                    </a>
+
+                    <a
+                        href="https://instagram.com/automoviles_atuel"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="mt-3 flex w-full items-center justify-center gap-2 rounded-radius-card border border-border bg-surface px-5 py-3 font-sans font-semibold text-text transition hover:bg-accent-soft"
+                    >
+                        <svg
+                            class="h-5 w-5"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                            stroke="currentColor"
+                            stroke-width="0.192"
+                        >
+                            <path
+                                fill-rule="evenodd"
+                                clip-rule="evenodd"
+                                d="M12 18C15.3137 18 18 15.3137 18 12C18 8.68629 15.3137 6 12 6C8.68629 6 6 8.68629 6 12C6 15.3137 8.68629 18 12 18ZM12 16C14.2091 16 16 14.2091 16 12C16 9.79086 14.2091 8 12 8C9.79086 8 8 9.79086 8 12C8 14.2091 9.79086 16 12 16Z"
+                                fill="currentColor"
+                            >
+                            </path>
+                            <path
+                                d="M18 5C17.4477 5 17 5.44772 17 6C17 6.55228 17.4477 7 18 7C18.5523 7 19 6.55228 19 6C19 5.44772 18.5523 5 18 5Z"
+                                fill="currentColor"
+                            >
+                            </path>
+                            <path
+                                fill-rule="evenodd"
+                                clip-rule="evenodd"
+                                d="M1.65396 4.27606C1 5.55953 1 7.23969 1 10.6V13.4C1 16.7603 1 18.4405 1.65396 19.7239C2.2292 20.8529 3.14708 21.7708 4.27606 22.346C5.55953 23 7.23969 23 10.6 23H13.4C16.7603 23 18.4405 23 19.7239 22.346C20.8529 21.7708 21.7708 20.8529 22.346 19.7239C23 18.4405 23 16.7603 23 13.4V10.6C23 7.23969 23 5.55953 22.346 4.27606C21.7708 3.14708 20.8529 2.2292 19.7239 1.65396C18.4405 1 16.7603 1 13.4 1H10.6C7.23969 1 5.55953 1 4.27606 1.65396C3.14708 2.2292 2.2292 3.14708 1.65396 4.27606ZM13.4 3H10.6C8.88684 3 7.72225 3.00156 6.82208 3.0751C5.94524 3.14674 5.49684 3.27659 5.18404 3.43597C4.43139 3.81947 3.81947 4.43139 3.43597 5.18404C3.27659 5.49684 3.14674 5.94524 3.0751 6.82208C3.00156 7.72225 3 8.88684 3 10.6V13.4C3 15.1132 3.00156 16.2777 3.0751 17.1779C3.14674 18.0548 3.27659 18.5032 3.43597 18.816C3.81947 19.5686 4.43139 20.1805 5.18404 20.564C5.49684 20.7234 5.94524 20.8533 6.82208 20.9249C7.72225 20.9984 8.88684 21 10.6 21H13.4C15.1132 21 16.2777 20.9984 17.1779 20.9249C18.0548 20.8533 18.5032 20.7234 18.816 20.564C19.5686 20.1805 20.1805 19.5686 20.564 18.816C20.7234 18.5032 20.8533 18.0548 20.9249 17.1779C20.9984 16.2777 21 15.1132 21 13.4V10.6C21 8.88684 20.9984 7.72225 20.9249 6.82208C20.8533 5.94524 20.7234 5.49684 20.564 5.18404C20.1805 4.43139 19.5686 3.81947 18.816 3.43597C18.5032 3.27659 18.0548 3.14674 17.1779 3.0751C16.2777 3.00156 15.1132 3 13.4 3Z"
+                                fill="currentColor"
+                            >
+                            </path>
+                        </svg>
+                        Seguinos en Instagram
+                    </a>
+
+                    <button
+                        id="share-btn"
+                        type="button"
+                        class="mt-3 flex w-full items-center justify-center gap-2 rounded-radius-card border border-border bg-surface px-5 py-3 font-sans font-semibold text-text transition hover:bg-accent-soft"
+                    >
+                        <svg
+                            class="h-5 w-5"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="1.5"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="M7.217 10.907a2.25 2.25 0 1 0 0 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186 9.566-5.314m-9.566 7.5 9.566 5.314M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+                            />
+                        </svg>
+                        Compartir
+                    </button>
+                </div>
+            </aside>
+        </div>
+    </main>
+
     {
         user ? (
-            <a class="edit-button" href={`/autos/edit?id=${car.id}`}>
+            <a
+                class="fixed bottom-5 left-5 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-surface text-2xl text-text shadow-lg ring-1 ring-border transition hover:scale-110"
+                href={`/autos/edit?id=${car.id}`}
+                aria-label="Editar auto"
+            >
                 ✏️
             </a>
-        ) : (
-            ""
-        )
+        ) : null
     }
 </Layout>
 
-<style>
-    .car-detail {
-        font-family: "Arial", sans-serif;
-        max-width: 800px;
-        margin: 0 auto;
-        padding: 20px;
-        background-color: #f9f9f9;
-        border-radius: 8px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        margin-top: 10vh;
-    }
-
-    .car-features {
-        margin-bottom: 20px;
-    }
-
-    .car-features h3 {
-        font-size: 1.5rem;
-        color: #333;
-        margin-bottom: 10px;
-    }
-
-    .car-features ul {
-        padding: 0;
-        list-style-type: none;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-    }
-
-    .car-features li {
-        background-color: #e0e0e0;
-        padding: 5px 10px;
-        border-radius: 4px;
-        font-size: 0.9rem;
-        color: #333;
-    }
-
-    @media (max-width: 768px) {
-        .car-detail {
-            padding: 15px;
+<script>
+    const shareBtn = document.querySelector("#share-btn");
+    shareBtn?.addEventListener("click", async () => {
+        const url = window.location.href;
+        const title = document.title;
+        if (navigator.share) {
+            try {
+                await navigator.share({ title, url });
+            } catch (err) {
+                if ((err as Error).name !== "AbortError") {
+                    console.error("Error al compartir:", err);
+                }
+            }
+        } else {
+            try {
+                await navigator.clipboard.writeText(url);
+                shareBtn.textContent = "¡Link copiado!";
+                setTimeout(() => (shareBtn.textContent = "Compartir"), 2000);
+            } catch {
+                shareBtn.textContent = "No se pudo copiar";
+                setTimeout(() => (shareBtn.textContent = "Compartir"), 2000);
+            }
         }
-    }
-
-    .edit-button {
-        text-decoration: none;
-        position: fixed;
-        bottom: 2rem; /* Espacio desde el borde inferior */
-        right: 2rem; /* Espacio desde el borde derecho */
-        background-color: #e4e4e4;
-        color: #fff; /* Color del texto (blanco) */
-        font-size: 1.5rem; /* Tamaño del emoji */
-        width: 3.5rem; /* Ancho del botón */
-        height: 3.5rem; /* Alto del botón */
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        border-radius: 50%; /* Hace el botón circular */
-        box-shadow: 0px 0px 10px rgba(0, 0, 0, 1); /* Sombra suave */
-        cursor: pointer; /* Cambia el cursor a mano al pasar el mouse */
-        transition:
-            transform 0.3s ease,
-            box-shadow 0.3s ease;
-        z-index: 1000; /* Asegura que esté sobre otros elementos */
-    }
-
-    .edit-button:hover {
-        transform: scale(
-            1.1
-        ); /* Aumenta ligeramente el tamaño al pasar el mouse */
-        box-shadow: 0 8px 12px rgba(0, 0, 0, 0.3); /* Sombra más intensa al pasar el mouse */
-    }
-
-    .edit-button:active {
-        transform: scale(0.95); /* Reduce el tamaño al hacer clic */
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Sombra más pequeña */
-    }
-</style>
+    });
+</script>

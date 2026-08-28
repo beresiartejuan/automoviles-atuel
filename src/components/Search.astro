@@ -1,151 +1,97 @@
 ---
-import Title from "@ui/Title.astro";
+const url = new URL(Astro.url);
+const searchTerm = url.searchParams.get("q") ?? "";
+const estado = url.searchParams.get("estado") ?? "todos";
+
+const options = [
+    { value: "todos", label: "Todos" },
+    { value: "0km", label: "0km" },
+    { value: "usado", label: "Usados" },
+];
 ---
 
-<div class="container">
-    <Title tag="h3" variant="compac">Encontra el auto perfecto para vos</Title>
-    <section>
-        <div class="buttons">
-            <button id="new-btn">0km</button>
-            <button id="used-btn">Usados</button>
+<div class="mx-auto w-full max-w-3xl px-4 py-6">
+    <form
+        id="search-form"
+        class="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4"
+        action="/autos"
+        method="GET"
+    >
+        <div class="relative flex-1">
+            <input
+                id="search-input"
+                name="q"
+                type="search"
+                value={searchTerm}
+                placeholder="Buscar por marca o modelo…"
+                class="w-full rounded-radius-card border border-border bg-surface px-4 py-3 font-sans text-base text-text shadow-sm placeholder:text-text-secondary focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+            />
         </div>
-        <input
-            id="search-input"
-            type="text"
-            placeholder="Escribí la marca o modelo del auto..."
-        />
-        <button id="search-btn">Buscar</button>
-    </section>
+
+        <div
+            id="estado-control"
+            class="flex flex-wrap items-center gap-1 rounded-radius-pill border border-border bg-surface p-1"
+            role="group"
+            aria-label="Filtrar por estado"
+        >
+            {
+                options.map((opt) => (
+                    <button
+                        type="button"
+                        data-value={opt.value}
+                        class={`estado-btn rounded-radius-pill px-4 py-2 font-sans text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-brand-500/30 ${estado === opt.value ? "bg-brand-500 text-white" : "text-text-secondary hover:bg-accent-soft hover:text-text"}`}
+                        aria-pressed={estado === opt.value ? "true" : "false"}
+                    >
+                        {opt.label}
+                    </button>
+                ))
+            }
+        </div>
+
+        <input id="estado-input" type="hidden" name="estado" value={estado} />
+
+        <button
+            type="submit"
+            class="inline-flex items-center justify-center rounded-radius-card bg-brand-500 px-5 py-3 font-sans text-sm font-semibold text-white transition hover:bg-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-500"
+        >
+            Buscar
+        </button>
+    </form>
 </div>
+
 <script>
-    const urlParams = new URLSearchParams(window.location.search);
+    const form = document.querySelector("#search-form") as HTMLFormElement;
+    const estadoInput = document.querySelector("#estado-input") as HTMLInputElement;
+    const buttons = document.querySelectorAll(".estado-btn");
 
-    let carStatus = urlParams.has("nuevo");
-    const searchTerm = urlParams.get("q");
+    buttons.forEach((btn) => {
+        btn.addEventListener("click", () => {
+            const value = (btn as HTMLElement).dataset.value ?? "todos";
+            estadoInput.value = value;
 
-    (document.querySelector("#search-input") as HTMLInputElement).value =
-        searchTerm ?? "";
+            buttons.forEach((b) => {
+                const isSelected = b === btn;
+                b.setAttribute("aria-pressed", isSelected ? "true" : "false");
+                b.classList.toggle("bg-brand-500", isSelected);
+                b.classList.toggle("text-white", isSelected);
+                b.classList.toggle("text-text-secondary", !isSelected);
+                b.classList.toggle("hover:bg-accent-soft", !isSelected);
+                b.classList.toggle("hover:text-text", !isSelected);
+            });
 
-    if (carStatus) {
-        document.querySelector("#new-btn")?.classList.add("selected");
-    } else {
-        document.querySelector("#used-btn")?.classList.add("selected");
-    }
-
-    // Cambiar entre botones de estado
-    document.getElementById("new-btn")!.addEventListener("click", () => {
-        carStatus = true;
-        toggleSelected("new-btn", "used-btn");
+            form.requestSubmit();
+        });
     });
 
-    document.getElementById("used-btn")!.addEventListener("click", () => {
-        carStatus = false;
-        toggleSelected("used-btn", "new-btn");
-    });
-
-    // Buscar autos al hacer clic
-    document.getElementById("search-btn")!.addEventListener("click", () => {
-        const searchTerm = (
-            document.getElementById("search-input") as HTMLInputElement
-        ).value
-            .trim()
-            .toLowerCase();
-
-        if (searchTerm === "") {
-            alert("Por favor, escribí una marca o modelo.");
-            return;
+    form.addEventListener("submit", (e) => {
+        const input = form.querySelector("#search-input") as HTMLInputElement;
+        const params = new URLSearchParams();
+        const q = input.value.trim();
+        if (q) params.set("q", q);
+        if (estadoInput.value && estadoInput.value !== "todos") {
+            params.set("estado", estadoInput.value);
         }
-
-        window.location.href = `/autos?q=${encodeURIComponent(searchTerm)}${carStatus ? "&nuevo" : ""}`;
+        e.preventDefault();
+        window.location.href = `/autos?${params.toString()}`;
     });
-
-    // Función para alternar clases de botones
-    function toggleSelected(selectedId: string, otherId: string) {
-        document.getElementById(selectedId)!.classList.add("selected");
-        document.getElementById(otherId)!.classList.remove("selected");
-    }
 </script>
-
-<style lang="scss">
-    $padding: 0.8rem 2rem;
-
-    .container {
-        margin-top: 15vh !important;
-    }
-
-    section {
-        font-family: "Kanit", sans-serif;
-
-        padding: 5vh 0 10vh 0;
-        display: flex;
-        flex-direction: row;
-        flex-wrap: wrap;
-
-        max-width: fit-content;
-        margin: 0 auto;
-        gap: 1.2rem;
-
-        .buttons {
-            display: flex;
-            flex-direction: row;
-            flex-wrap: wrap;
-            gap: 1rem;
-
-            button {
-                padding: $padding;
-                background-color: rgba(0, 0, 0, 0.13);
-                border: none;
-                border-radius: 5px;
-
-                &.selected {
-                    background-color: rgba(0, 0, 0, 0.75);
-                    color: #ececec;
-                }
-            }
-        }
-
-        input {
-            padding: $padding;
-            background-color: rgba(0, 0, 0, 0.13);
-            border: none;
-            border-radius: 5px;
-            width: 300px;
-        }
-
-        button {
-            padding: $padding;
-            background-color: transparent;
-            border: 2px solid #000;
-            font-weight: 600;
-            border-radius: 5px;
-            max-width: fit-content;
-        }
-
-        @media screen and (width < 800px) {
-            flex-direction: column;
-
-            .buttons {
-                justify-content: center;
-
-                button {
-                    margin: 0;
-                }
-            }
-
-            button {
-                margin: 0 auto;
-            }
-
-            input {
-                width: 70vw;
-                padding: 1.2rem 1rem;
-            }
-        }
-    }
-
-    @media screen and (width < 800px) {
-        h3 {
-            font-size: 1.6rem;
-        }
-    }
-</style>

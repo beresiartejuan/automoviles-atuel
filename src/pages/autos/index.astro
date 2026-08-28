@@ -1,33 +1,77 @@
 ---
 import Layout from "@/layouts/Layout.astro";
 import SearchBar from "@/components/Search.astro";
-import Header from "@/components/Header.astro";
 import { list_cars_with_main_photo } from "@db/cars";
 import CardList from "@/components/CardList.astro";
 
 const url = new URL(Astro.url);
 const searchTerm = url.searchParams.get("q")?.toLowerCase() || "";
-const status = url.searchParams.has("nuevo");
+const estado = url.searchParams.get("estado")?.toLowerCase() || "todos";
 
-const items = await list_cars_with_main_photo(true, searchTerm, status ? false : true);
+let used: boolean | null = null;
+if (estado === "usado") used = true;
+if (estado === "0km") used = false;
 
+const items = await list_cars_with_main_photo(true, searchTerm, used);
+
+const totalLabel =
+    items.length === 1 ? "1 auto encontrado" : `${items.length} autos encontrados`;
 ---
 
-<Layout>
-    <Header />
-    <SearchBar />
-    <CardList items={items} />
-</Layout>
+<Layout title="Autos | Automóviles Atuel">
+    <main class="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+        <nav aria-label="Breadcrumb" class="mb-4">
+            <ol class="flex items-center gap-2 font-sans text-sm text-text-secondary">
+                <li>
+                    <a href="/" class="transition hover:text-brand-500">Inicio</a>
+                </li>
+                <li aria-hidden="true">/</li>
+                <li class="font-medium text-text">Autos</li>
+            </ol>
+        </nav>
 
-<style>
-    h3 {
-        max-width: fit-content;
-        margin: 0 auto;
-        font-family: "Kanit", sans-serif;
-        font-weight: 600;
-        font-size: 2.5rem;
-        margin-top: 8vh;
-        text-align: center;
-        text-wrap: balance;
-    }
-</style>
+        <SearchBar />
+
+        <p class="mb-4 font-sans text-sm text-text-secondary">
+            {
+                searchTerm
+                    ? `Resultados para "${searchTerm}" · ${totalLabel.toLowerCase()}`
+                    : totalLabel
+            }
+        </p>
+
+        {
+            items.length > 0 ? (
+                <CardList items={items} />
+            ) : (
+                <div class="mx-auto flex max-w-md flex-col items-center py-16 text-center">
+                    <svg
+                        class="mb-4 h-16 w-16 text-text-secondary/60"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.5"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
+                        />
+                    </svg>
+                    <h2 class="font-display text-xl font-semibold text-text">
+                        No encontramos autos con esos filtros.
+                    </h2>
+                    <p class="mt-1 font-sans text-sm text-text-secondary">
+                        Probá con otra búsqueda o mirá todo el stock.
+                    </p>
+                    <a
+                        href="/autos"
+                        class="mt-5 inline-flex items-center justify-center rounded-radius-card bg-brand-500 px-5 py-2.5 font-sans text-sm font-semibold text-white transition hover:bg-brand-600"
+                    >
+                        Ver todos los autos
+                    </a>
+                </div>
+            )
+        }
+    </main>
+</Layout>
