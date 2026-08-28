@@ -9,20 +9,22 @@
     "astro": "astro"
   },
   "dependencies": {
-    "@astrojs/vercel": "^9.0.1",
-    "@libsql/client": "^0.15.15",
-    "@types/uuid": "^10.0.0",
-    "astro": "^5.16.0",
+    "@astrojs/vercel": "^11.0.8",
+    "@libsql/client": "^0.17.4",
+    "astro": "^7.2.9",
     "bcrypt": "^6.0.0",
-    "jsonwebtoken": "^9.0.2",
+    "jsonwebtoken": "^9.0.3",
     "normalize.css": "^8.0.1",
     "qr-code-styling": "^1.9.2",
-    "sass": "^1.94.2",
-    "uuid": "^13.0.0",
-    "valibot": "^1.1.0"
+    "sass": "^1.103.1",
+    "uuid": "^14.0.2",
+    "valibot": "^1.4.2"
   },
-  "devDependencies": {
-    "@types/bcrypt": "^6.0.0",
-    "@types/jsonwebtoken": "^9.0.10"
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "bcrypt",
+      "esbuild",
+      "@parcel/watcher"
+    ]
   }
 }

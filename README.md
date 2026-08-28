@@ -1,43 +1,44 @@
-# Astro Starter Kit: Minimal
+# Automóviles Atuel
 
-```sh
-npm create astro@latest -- --template minimal
+Sitio web con catálogo de vehículos y panel de administración. Construido con Astro (SSR en Vercel) y Turso (libSQL).
+
+## Stack
+
+- **Astro 7** (SSR, adapter `@astrojs/vercel`)
+- **Turso / libSQL** vía `@libsql/client`
+- **sass**, **valibot**, **bcrypt**, **jsonwebtoken**
+
+## Gestor de paquetes
+
+El proyecto usa **pnpm** (no npm). Los scripts de compilación de `bcrypt`, `esbuild` y `@parcel/watcher` están aprobados en `pnpm.onlyBuiltDependencies` dentro del `package.json`.
+
+## Comandos
+
+| Command                 | Action                                           |
+| :---------------------- | :----------------------------------------------- |
+| `pnpm install`          | Installs dependencies                            |
+| `pnpm run dev`          | Starts local dev server at `localhost:4321`      |
+| `pnpm run build`        | Build your production site to `./dist/`          |
+| `pnpm run preview`      | Preview your build locally, before deploying     |
+| `pnpm run astro ...`    | Run CLI commands like `astro add`, `astro check` |
+
+## Variables de entorno
+
+```env
+TURSO_DATABASE_URL=libsql://...
+TURSO_AUTH_TOKEN=...
+PRIVATE_KEY=...      # clave para firmar el JWT del login
+IMGBB_KEY=...        # (opcional) para subir fotos a ImgBB
 ```
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+## Scripts de base de datos
 
-## 🚀 Project Structure
+En `scripts/` hay utilidades para la base de datos:
 
-Inside of your Astro project, you'll see the following folders and files:
+- `schema.sql` — esquema v2 (FKs con `ON DELETE CASCADE`, `CHECK`s, índices)
+- `create-schema.mjs` — crea el esquema en la DB apuntada por `DB_URL` / `DB_TOKEN`
+- `migrate-data.mjs` — migra datos desde la DB vieja (solo lectura) a la DB nueva (idempotente)
 
-```text
-/
-├── public/
-├── src/
-│   └── pages/
-│       └── index.astro
-└── package.json
-```
+## Documentación
 
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
-
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
-
-Any static assets, like images, can be placed in the `public/` directory.
-
-## 🧞 Commands
-
-All commands are run from the root of the project, from a terminal:
-
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
-
-## 👀 Want to learn more?
-
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+Ver `docs/` para el estado del proyecto, esquema de la base de datos y tareas planificadas.
