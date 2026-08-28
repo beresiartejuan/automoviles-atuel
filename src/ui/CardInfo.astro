@@ -6,43 +6,30 @@ interface Props {
 }
 
 const { car } = Astro.props;
+
+const fields: { label: string; value: unknown }[] = [
+    { label: "Modelo", value: car.model },
+    { label: "Descripción", value: car.description },
+    { label: "Usado", value: car.is_used ? "Sí" : "No" },
+];
+
+const visibleFields = fields.filter((field) =>
+    field.value !== undefined && field.value !== null && field.value !== ""
+);
 ---
 
-<section class="car-info">
-    <h2>Información del Auto</h2>
-    <ul>
-        <li><strong>Modelo:</strong> {car.model}</li>
-        <li><strong>Descripción:</strong> {car.description}</li>
-        <li>
-            <strong>Usado:</strong>
-            {car.is_used ? "Sí" : "No"}
-        </li>
+<section class="mb-5">
+    <h2 class="font-display text-xl sm:text-2xl font-medium text-text mb-2.5">
+        Información del Auto
+    </h2>
+    <ul class="list-none p-0">
+        {
+            visibleFields.map((field) => (
+                <li class="mb-2 text-base text-text-secondary">
+                    <strong class="text-text font-medium">{field.label}:</strong>{" "}
+                    {String(field.value)}
+                </li>
+            ))
+        }
     </ul>
 </section>
-
-<style>
-    .car-info {
-        margin-bottom: 20px;
-    }
-
-    .car-info h2 {
-        font-size: 1.5rem;
-        color: #333;
-        margin-bottom: 10px;
-    }
-
-    ul {
-        list-style-type: none;
-        padding: 0;
-    }
-
-    li {
-        margin-bottom: 8px;
-        font-size: 1rem;
-        color: #666;
-    }
-
-    strong {
-        color: #333;
-    }
-</style>

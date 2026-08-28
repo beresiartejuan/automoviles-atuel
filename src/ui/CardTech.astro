@@ -6,52 +6,37 @@ interface Props {
 }
 
 const { info } = Astro.props;
+
+const fields: { label: string; value: unknown; suffix?: string }[] = [
+    { label: "Kilometraje", value: info.mileage },
+    { label: "Tracción", value: info.traction },
+    { label: "Tipo de Combustible", value: info.fuel_type },
+    { label: "Transmisión", value: info.transmission_type },
+    {
+        label: "Capacidad del Tanque",
+        value: info.fuel_tank_capacity_liters,
+        suffix: " L",
+    },
+    { label: "Tipo de Motor", value: info.engine_type },
+];
+
+const visibleFields = fields.filter((field) =>
+    field.value !== undefined && field.value !== null && field.value !== ""
+);
 ---
 
-<section class="car-tech">
-    <h2>Ficha Técnica</h2>
-    <ul>
-        <li><strong>Kilometraje:</strong> {info.mileage}</li>
-        <li><strong>Tracción:</strong> {info.traction}</li>
-        <li>
-            <strong>Tipo de Combustible:</strong>
-            {info.fuel_type}
-        </li>
-        <li>
-            <strong>Transmisión:</strong>
-            {info.transmission_type}
-        </li>
-        <li>
-            <strong>Capacidad del Tanque:</strong>
-            {info.fuel_tank_capacity_liters} L
-        </li>
-        <li><strong>Tipo de Motor:</strong> {info.engine_type}</li>
+<section class="mb-5">
+    <h2 class="font-display text-xl sm:text-2xl font-medium text-text mb-2.5">
+        Ficha Técnica
+    </h2>
+    <ul class="list-none p-0">
+        {
+            visibleFields.map((field) => (
+                <li class="mb-2 text-base text-text-secondary">
+                    <strong class="text-text font-medium">{field.label}:</strong>{" "}
+                    {String(field.value)}{field.suffix}
+                </li>
+            ))
+        }
     </ul>
 </section>
-
-<style>
-    .car-tech {
-        margin-bottom: 20px;
-    }
-
-    .car-tech h2 {
-        font-size: 1.5rem;
-        color: #333;
-        margin-bottom: 10px;
-    }
-
-    ul {
-        list-style-type: none;
-        padding: 0;
-    }
-
-    li {
-        margin-bottom: 8px;
-        font-size: 1rem;
-        color: #666;
-    }
-
-    strong {
-        color: #333;
-    }
-</style>

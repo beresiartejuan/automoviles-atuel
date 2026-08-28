@@ -4,64 +4,20 @@ interface Props {
     variant?: "primary" | "secondary" | "highlight" | "compac";
     className?: string;
 }
+
 const { tag: Tag, variant = "primary", className = "" } = Astro.props;
+
+const variants: Record<NonNullable<Props["variant"]>, string> = {
+    primary:
+        "font-sans text-4xl sm:text-5xl font-semibold text-surface [text-shadow:2px_2px_5px_rgba(0,0,0,0.7)]",
+    secondary:
+        "font-display text-3xl font-medium text-center text-text",
+    highlight:
+        "text-3xl sm:text-4xl font-medium underline text-center text-brand-500",
+    compac: "w-fit mx-auto font-display text-2xl sm:text-3xl font-semibold text-center text-text",
+};
 ---
 
-<Tag class={`title ${variant} ${className}`}>
+<Tag class={`text-balance m-0 ${variants[variant]} ${className}`}>
     <slot />
 </Tag>
-
-<style lang="scss">
-    .title {
-        text-wrap: balance;
-        margin: 0;
-    }
-
-    /* Variantes generales */
-    .title.primary {
-        font-family: "Popins", serif;
-        font-size: 3rem;
-        font-weight: 600;
-        color: aliceblue;
-        text-shadow: 2px 2px 5px #000;
-
-        @media screen and (max-width: 750px) {
-            font-size: 2.5rem;
-        }
-    }
-
-    .title.secondary {
-        font-family: "Kanit", sans-serif;
-        font-size: 2rem;
-        font-weight: 500;
-        text-align: center;
-        color: #333;
-    }
-
-    .title.highlight {
-        font-size: 2.8rem;
-        font-weight: 500;
-        text-decoration: underline;
-        text-align: center;
-    }
-
-    .title.compac {
-        max-width: fit-content;
-        margin: 0 auto;
-        font-family: "Kanit", sans-serif;
-        font-weight: 600;
-        font-size: 2.1rem;
-        text-align: center;
-
-        @media screen and (max-width: 750px) {
-            font-size: 1.5rem;
-        }
-    }
-
-    /* Responsividad */
-    @media screen and (max-width: 750px) {
-        .title.highlight {
-            font-size: 2.5rem;
-        }
-    }
-</style>
