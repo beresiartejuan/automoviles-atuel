@@ -22,7 +22,7 @@ export const POST: APIRoute = async ({ request, cookies, url }) => {
         await turso.execute({
             sql: `
 			UPDATE cars 
-			SET name = ?, model = ?, description = ?, year = ?, is_used = ?, published = ? 
+			SET name = ?, model = ?, description = ?, year = ?, is_used = ?, published = ?, updated_at = datetime('now') 
 			WHERE id = ?`,
             args: [name, model, description, year, is_used, published, car_id],
         });

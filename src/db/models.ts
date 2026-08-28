@@ -13,8 +13,8 @@ export interface ICar {
     description: string;
     year: number;
     is_used: boolean;
-    update_at: string; // Fecha en formato texto
-    create_at: string; // Fecha en formato texto
+    created_at: string;
+    updated_at: string;
     published: boolean;
 }
 
@@ -28,8 +28,7 @@ export interface ICarPhoto {
 
 // Tabla `car_info`
 export interface ICarInfo {
-    id: number; // Autoincremental
-    car_id: number; // Relación con la tabla cars
+    car_id: string; // PK y FK con la tabla cars (relación 1 a 1)
     mileage: string;
     traction: string;
     fuel_type: string;

@@ -57,11 +57,11 @@ export const get_all_by_car_id = async (car_id: string) => {
 export const insert_car = async (car: ICar) =>
     executeQuery(
         `INSERT INTO cars 
-        (id, name, model, description, year, is_used, update_at, create_at, published) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        (id, name, model, description, year, is_used, published) 
+        VALUES (?, ?, ?, ?, ?, ?, ?)`,
         [
             car.id, car.name, car.model, car.description, car.year,
-            car.is_used, car.update_at, car.create_at, car.published
+            car.is_used, car.published
         ]
     );
 
@@ -93,21 +93,12 @@ export const delete_photo_by_id = async (photo: Pick<ICarPhoto, 'id'>) =>
 export const delete_car_by_id = async (car: Pick<ICar, 'id'>): Promise<boolean> => {
     try {
 
-        await executeQuery("BEGIN TRANSACTION");
-
-        await executeQuery("DELETE FROM car_photos WHERE car_id = ?", [car.id]);
-
-        await executeQuery("DELETE FROM car_info WHERE car_id = ?", [car.id]);
-
+        // El ON DELETE CASCADE de la DB elimina fotos y ficha técnica automáticamente
         await executeQuery("DELETE FROM cars WHERE id = ?", [car.id]);
-
-        await executeQuery("COMMIT");
 
         return true;
 
     } catch (error) {
-
-        await executeQuery("ROLLBACK");
 
         console.error("Error al eliminar el auto:", error);
 

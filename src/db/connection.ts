@@ -1,8 +1,9 @@
 import { createClient } from "@libsql/client";
+import { TURSO_DATABASE_URL, TURSO_AUTH_TOKEN } from "astro:env/server";
 
 export const turso = createClient({
-    url: import.meta.env.TURSO_DATABASE_URL as string,
-    authToken: import.meta.env.TURSO_AUTH_TOKEN as string,
+    url: TURSO_DATABASE_URL,
+    authToken: TURSO_AUTH_TOKEN,
 });
 
 type QueryResult<T> = T[];
