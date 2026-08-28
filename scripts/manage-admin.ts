@@ -1,7 +1,10 @@
 import { createClient } from "@libsql/client";
 import { drizzle } from "drizzle-orm/libsql";
 import bcrypt from "bcrypt";
+import { config } from "dotenv";
 import { admins } from "../src/db/schema.ts";
+
+config();
 
 const url = process.env.TURSO_DATABASE_URL;
 const token = process.env.TURSO_AUTH_TOKEN;
