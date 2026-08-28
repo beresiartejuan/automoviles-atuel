@@ -3,7 +3,6 @@ import Layout from "@/layouts/Layout.astro";
 import { get_full_car_by_id } from "@/db/cars";
 
 const id = Astro.url.searchParams.get("id");
-
 const userCookie = Astro.cookies.get("authenticated");
 
 if (!userCookie) {
@@ -28,369 +27,673 @@ if (!carInfo) {
 }
 
 const photos = result.photos;
+const currentYear = new Date().getFullYear();
+
+const features = [
+    { key: "parking_assist", label: "Asistencia de estacionamiento" },
+    { key: "push_button_start", label: "Encendido por botón" },
+    { key: "remote_locking", label: "Cierre remoto" },
+    { key: "connectivity", label: "Conectividad" },
+    { key: "satellite_navigation", label: "Navegación satelital" },
+    { key: "screens", label: "Pantallas" },
+    { key: "panoramic_roof", label: "Techo panorámico" },
+    { key: "air_conditioning", label: "Aire acondicionado" },
+    { key: "fog_lights", label: "Faros antiniebla" },
+    { key: "bluetooth", label: "Bluetooth" },
+] as const;
 ---
 
-<Layout>
-    <section class="form-section" style="margin-top: 15vh;">
-        <form car-id={car.id} action="/api/cars/update">
-            <fieldset>
-                <legend>Información General</legend>
-                <label
-                    >Nombre:
-                    <input type="text" name="name" value={car.name} required />
-                </label>
-                <label
-                    >Modelo:
-                    <input
-                        type="text"
-                        name="model"
-                        value={car.model}
-                        required
-                    />
-                </label>
-                <label
-                    >Descripción:
-                    <textarea name="description" required
-                        >{car.description}</textarea
-                    >
-                </label>
-                <label
-                    >Año:
-                    <input
-                        type="number"
-                        name="year"
-                        value={car.year}
-                        required
-                    />
-                </label>
-                <label
-                    >¿Usado?
-                    <input
-                        type="checkbox"
-                        name="is_used"
-                        checked={car.is_used ? "checked" : ""}
-                    />
-                </label>
-                <label
-                    >¿Publicado?
-                    <input
-                        type="checkbox"
-                        name="published"
-                        checked={car.published ? "checked" : ""}
-                    />
-                </label>
-            </fieldset>
-            <button type="submit">Actualizar Información General</button>
-        </form>
-    </section>
-
-    <section class="form-section">
-        <form car-id={car.id} action="/api/info/update">
-            <fieldset>
-                <legend>Plantilla Técnica</legend>
-                <label
-                    >Kilometraje:
-                    <input
-                        type="text"
-                        name="mileage"
-                        value={carInfo.mileage}
-                        required
-                    />
-                </label>
-                <label
-                    >Tracción:
-                    <input
-                        type="text"
-                        name="traction"
-                        value={carInfo.traction}
-                        required
-                    />
-                </label>
-                <label
-                    >Tipo de Combustible:
-                    <input
-                        type="text"
-                        name="fuel_type"
-                        value={carInfo.fuel_type}
-                        required
-                    />
-                </label>
-                <label
-                    >Transmisión:
-                    <input
-                        type="text"
-                        name="transmission_type"
-                        value={carInfo.transmission_type}
-                        required
-                    />
-                </label>
-                <label
-                    >Capacidad del Tanque (L):
-                    <input
-                        type="number"
-                        name="fuel_tank_capacity_liters"
-                        value={carInfo.fuel_tank_capacity_liters}
-                        required
-                    />
-                </label>
-                <label
-                    >Tipo de Motor:
-                    <input
-                        type="text"
-                        name="engine_type"
-                        value={carInfo.engine_type}
-                        required
-                    />
-                </label>
-            </fieldset>
-            <button type="submit">Actualizar Plantilla Técnica</button>
-        </form>
-    </section>
-
-    <section class="form-section">
-        <form
-            car-id={car.id}
-            action="/api/photos/update"
-            enctype="multipart/form-data"
-        >
-            <fieldset>
-                <legend>Fotos</legend>
-
-                {
-                    photos.map((photo, index) => (
-                        <label>
-                            Foto {index}
-                            <input
-                                type="text"
-                                name="photos[]"
-                                value={photo.photo_url}
-                            />
-                            <img src={photo.photo_url} alt="Previsualización" />
-                        </label>
-                    ))
-                }
-            </fieldset>
-            <fieldset>
-                <legend>Subir fotos</legend>
-                <label for="photo-upload">Seleccionar fotos:</label>
-                <input
-                    type="file"
-                    id="photo-upload"
-                    name="new-photos"
-                    accept="image/*"
-                    multiple
-                    placeholder="..."
-                />
-                <p class="note">
-                    Puedes seleccionar múltiples fotos para cargar.
+<Layout title={`Editar ${car.name}`} showFab={false}>
+    <main class="mx-auto min-h-[70vh] max-w-5xl px-4 py-8 lg:px-8">
+        <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+                <h1 class="font-display text-2xl font-semibold text-text">
+                    Editar vehículo
+                </h1>
+                <p class="mt-1 text-sm text-text-secondary">
+                    {car.name} {car.model} · {car.year}
                 </p>
-            </fieldset>
-            <button type="submit">Actualizar Fotos</button>
-        </form>
-    </section>
-    <section class="form-section">
-        <form id="qr-form" data-link={`${Astro.site}/autos/${car.id}`}>
-            <fieldset>
-                <legend>Código QR</legend>
+            </div>
 
-                <div id="car-qr"></div>
-            </fieldset>
+            <div class="flex items-center gap-3">
+                <a
+                    href={`/autos/${car.id}`}
+                    class="inline-flex items-center justify-center rounded-radius-card border border-border bg-surface px-4 py-2 text-sm font-semibold text-text transition hover:bg-accent-soft"
+                >
+                    Ver ficha
+                </a>
+                <a
+                    href="/panel"
+                    class="inline-flex items-center justify-center rounded-radius-card bg-brand-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-600"
+                >
+                    Volver al panel
+                </a>
+            </div>
+        </div>
+
+        <form
+            id="edit-form"
+            data-car-id={car.id}
+            class="space-y-8"
+            novalidate
+        >
+            <!-- Datos del auto -->
+            <section class="rounded-radius-card border border-border bg-surface p-5 shadow-card sm:p-6">
+                <h2 class="mb-4 font-display text-lg font-semibold text-text">
+                    Datos del auto
+                </h2>
+                <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                    <div class="sm:col-span-2 field-group">
+                        <label for="name" class="mb-1.5 block text-sm font-semibold text-text">
+                            Nombre <span class="text-danger">*</span>
+                        </label>
+                        <input
+                            type="text"
+                            id="name"
+                            name="name"
+                            value={car.name}
+                            required
+                            class="w-full rounded-radius-card border border-border bg-background px-4 py-3 text-text outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-200"
+                        />
+                        <p class="error-message hidden text-sm text-danger"></p>
+                    </div>
+
+                    <div class="field-group">
+                        <label for="model" class="mb-1.5 block text-sm font-semibold text-text">
+                            Modelo <span class="text-danger">*</span>
+                        </label>
+                        <input
+                            type="text"
+                            id="model"
+                            name="model"
+                            value={car.model}
+                            required
+                            class="w-full rounded-radius-card border border-border bg-background px-4 py-3 text-text outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-200"
+                        />
+                        <p class="error-message hidden text-sm text-danger"></p>
+                    </div>
+
+                    <div class="field-group">
+                        <label for="year" class="mb-1.5 block text-sm font-semibold text-text">
+                            Año <span class="text-danger">*</span>
+                        </label>
+                        <input
+                            type="number"
+                            id="year"
+                            name="year"
+                            value={car.year}
+                            required
+                            min="1950"
+                            max={currentYear + 1}
+                            class="w-full rounded-radius-card border border-border bg-background px-4 py-3 text-text outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-200"
+                        />
+                        <p class="error-message hidden text-sm text-danger"></p>
+                    </div>
+
+                    <div class="sm:col-span-2 field-group">
+                        <label for="description" class="mb-1.5 block text-sm font-semibold text-text">
+                            Descripción
+                        </label>
+                        <textarea
+                            id="description"
+                            name="description"
+                            rows="4"
+                            class="w-full resize-y rounded-radius-card border border-border bg-background px-4 py-3 text-text outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-200"
+                        >{car.description}</textarea>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Ficha técnica -->
+            <section class="rounded-radius-card border border-border bg-surface p-5 shadow-card sm:p-6">
+                <h2 class="mb-4 font-display text-lg font-semibold text-text">
+                    Ficha técnica
+                </h2>
+                <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                    <div class="field-group">
+                        <label for="mileage" class="mb-1.5 block text-sm font-semibold text-text">
+                            Kilometraje <span class="text-danger">*</span>
+                        </label>
+                        <input
+                            type="text"
+                            id="mileage"
+                            name="mileage"
+                            value={carInfo.mileage}
+                            required
+                            class="w-full rounded-radius-card border border-border bg-background px-4 py-3 text-text outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-200"
+                        />
+                        <p class="error-message hidden text-sm text-danger"></p>
+                    </div>
+
+                    <div class="field-group">
+                        <label for="traction" class="mb-1.5 block text-sm font-semibold text-text">
+                            Tracción <span class="text-danger">*</span>
+                        </label>
+                        <input
+                            type="text"
+                            id="traction"
+                            name="traction"
+                            value={carInfo.traction}
+                            required
+                            class="w-full rounded-radius-card border border-border bg-background px-4 py-3 text-text outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-200"
+                        />
+                        <p class="error-message hidden text-sm text-danger"></p>
+                    </div>
+
+                    <div class="field-group">
+                        <label for="fuel_type" class="mb-1.5 block text-sm font-semibold text-text">
+                            Tipo de combustible <span class="text-danger">*</span>
+                        </label>
+                        <input
+                            type="text"
+                            id="fuel_type"
+                            name="fuel_type"
+                            value={carInfo.fuel_type}
+                            required
+                            class="w-full rounded-radius-card border border-border bg-background px-4 py-3 text-text outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-200"
+                        />
+                        <p class="error-message hidden text-sm text-danger"></p>
+                    </div>
+
+                    <div class="field-group">
+                        <label for="transmission_type" class="mb-1.5 block text-sm font-semibold text-text">
+                            Transmisión <span class="text-danger">*</span>
+                        </label>
+                        <input
+                            type="text"
+                            id="transmission_type"
+                            name="transmission_type"
+                            value={carInfo.transmission_type}
+                            required
+                            class="w-full rounded-radius-card border border-border bg-background px-4 py-3 text-text outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-200"
+                        />
+                        <p class="error-message hidden text-sm text-danger"></p>
+                    </div>
+
+                    <div class="field-group">
+                        <label for="fuel_tank_capacity_liters" class="mb-1.5 block text-sm font-semibold text-text">
+                            Capacidad del tanque (L)
+                        </label>
+                        <input
+                            type="number"
+                            id="fuel_tank_capacity_liters"
+                            name="fuel_tank_capacity_liters"
+                            value={carInfo.fuel_tank_capacity_liters ?? ""}
+                            class="w-full rounded-radius-card border border-border bg-background px-4 py-3 text-text outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-200"
+                        />
+                    </div>
+
+                    <div class="field-group">
+                        <label for="engine_type" class="mb-1.5 block text-sm font-semibold text-text">
+                            Tipo de motor <span class="text-danger">*</span>
+                        </label>
+                        <input
+                            type="text"
+                            id="engine_type"
+                            name="engine_type"
+                            value={carInfo.engine_type}
+                            required
+                            class="w-full rounded-radius-card border border-border bg-background px-4 py-3 text-text outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-200"
+                        />
+                        <p class="error-message hidden text-sm text-danger"></p>
+                    </div>
+
+                    <div class="sm:col-span-2">
+                        <p class="mb-3 text-sm font-semibold text-text">Características</p>
+                        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                            {features.map(({ key, label }) => (
+                                <label class="flex cursor-pointer items-center gap-3 rounded-radius-card border border-border p-3 transition hover:bg-accent-soft has-[:checked]:border-brand-300 has-[:checked]:bg-brand-50">
+                                    <input
+                                        type="checkbox"
+                                        name={key}
+                                        checked={carInfo[key] ? "checked" : ""}
+                                        class="h-5 w-5 accent-brand-500"
+                                    />
+                                    <span class="text-sm font-medium text-text">{label}</span>
+                                </label>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Fotos -->
+            <section class="rounded-radius-card border border-border bg-surface p-5 shadow-card sm:p-6">
+                <h2 class="mb-4 font-display text-lg font-semibold text-text">
+                    Fotos
+                </h2>
+
+                {photos.length > 0 && (
+                    <div class="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4" id="photo-grid">
+                        {photos.map((photo) => (
+                            <div
+                                class="photo-item relative overflow-hidden rounded-radius-card border border-border bg-background"
+                                data-photo-url={photo.photo_url}
+                            >
+                                <img
+                                    src={photo.photo_url}
+                                    alt="Foto del vehículo"
+                                    class="h-32 w-full object-cover sm:h-36"
+                                />
+                                <div class="absolute right-2 top-2 flex gap-1">
+                                    <button
+                                        type="button"
+                                        data-action="set-main"
+                                        class="rounded-radius-card bg-brand-500 p-1.5 text-xs text-white shadow-sm transition hover:bg-brand-600"
+                                        title="Establecer como principal"
+                                    >
+                                        ★
+                                    </button>
+                                    <button
+                                        type="button"
+                                        data-action="remove-photo"
+                                        class="rounded-radius-card bg-danger p-1.5 text-xs text-white shadow-sm transition hover:bg-danger/90"
+                                        title="Eliminar foto"
+                                    >
+                                        ×
+                                    </button>
+                                </div>
+                                {photo.is_main && (
+                                    <span class="absolute bottom-2 left-2 rounded-radius-pill bg-success px-2 py-0.5 text-xs font-semibold text-white">
+                                        Principal
+                                    </span>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                )}
+
+                <div class="rounded-radius-card border border-dashed border-border bg-background p-5 text-center transition hover:border-brand-300">
+                    <label for="photo-upload" class="block cursor-pointer text-sm font-semibold text-brand-500">
+                        Agregar fotos
+                    </label>
+                    <input
+                        type="file"
+                        id="photo-upload"
+                        name="new-photos"
+                        accept="image/*"
+                        multiple
+                        class="mt-2 block w-full text-sm text-text-secondary file:mr-3 file:rounded-radius-card file:border-0 file:bg-brand-500 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white"
+                    />
+                    <p class="mt-2 text-xs text-text-secondary">
+                        Seleccioná una o varias imágenes. Las fotos existentes se mantienen.
+                    </p>
+                </div>
+
+                <div id="upload-preview" class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4"></div>
+            </section>
+
+            <!-- Publicación -->
+            <section class="rounded-radius-card border border-border bg-surface p-5 shadow-card sm:p-6">
+                <h2 class="mb-4 font-display text-lg font-semibold text-text">
+                    Publicación
+                </h2>
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <label class="flex cursor-pointer items-center gap-3 rounded-radius-card border border-border p-4 transition hover:bg-accent-soft has-[:checked]:border-brand-300 has-[:checked]:bg-brand-50">
+                        <input
+                            type="checkbox"
+                            id="is_used"
+                            name="is_used"
+                            checked={car.is_used ? "checked" : ""}
+                            class="h-5 w-5 accent-brand-500"
+                        />
+                        <div>
+                            <span class="block text-sm font-semibold text-text">Usado</span>
+                            <span class="block text-xs text-text-secondary">Marcar si el vehículo es usado</span>
+                        </div>
+                    </label>
+
+                    <label class="flex cursor-pointer items-center gap-3 rounded-radius-card border border-border p-4 transition hover:bg-accent-soft has-[:checked]:border-brand-300 has-[:checked]:bg-brand-50">
+                        <input
+                            type="checkbox"
+                            id="published"
+                            name="published"
+                            checked={car.published ? "checked" : ""}
+                            class="h-5 w-5 accent-brand-500"
+                        />
+                        <div>
+                            <span class="block text-sm font-semibold text-text">Publicado</span>
+                            <span class="block text-xs text-text-secondary">Visible en el sitio público</span>
+                        </div>
+                    </label>
+                </div>
+            </section>
+
+            <!-- Código QR -->
+            <section class="rounded-radius-card border border-border bg-surface p-5 shadow-card sm:p-6">
+                <h2 class="mb-4 font-display text-lg font-semibold text-text">
+                    Código QR
+                </h2>
+                <div class="flex items-center justify-center rounded-radius-card bg-white p-4" id="car-qr" data-link={`${Astro.site}/autos/${car.id}`}></div>
+            </section>
+
+            <!-- Acciones -->
+            <div class="sticky bottom-4 z-30 flex items-center justify-between gap-4 rounded-radius-card border border-border bg-surface p-4 shadow-card">
+                <a
+                    href="/panel"
+                    class="rounded-radius-card border border-border bg-surface px-5 py-2.5 text-sm font-semibold text-text transition hover:bg-accent-soft"
+                >
+                    Cancelar
+                </a>
+                <button
+                    type="submit"
+                    id="save-button"
+                    class="inline-flex items-center justify-center rounded-radius-card bg-brand-500 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                    <svg
+                        id="save-spinner"
+                        class="mr-2 hidden h-4 w-4 animate-spin"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        aria-hidden="true"
+                    >
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                    </svg>
+                    <span id="save-text">Guardar cambios</span>
+                </button>
+            </div>
         </form>
-    </section>
-    <a class="edit-button" href={`/autos/${car.id}`}>🔍</a>
+    </main>
 </Layout>
 
 <script>
     import QRCodeStyling from "qr-code-styling";
 
-    const qr_form = document.querySelector("#qr-form")!;
+    const qrContainer = document.getElementById("car-qr") as HTMLElement | null;
+    if (qrContainer) {
+        const QR = new QRCodeStyling({
+            width: 180,
+            height: 180,
+            data: qrContainer.getAttribute("data-link") as string,
+            type: "canvas",
+        });
+        QR.append(qrContainer);
+    }
 
-    const QR = new QRCodeStyling({
-        width: 200,
-        height: 200,
-        data: qr_form.getAttribute("data-link") as string,
-        type: "canvas",
+    const form = document.getElementById("edit-form") as HTMLFormElement | null;
+    const saveButton = document.getElementById("save-button") as HTMLButtonElement | null;
+    const saveSpinner = document.getElementById("save-spinner");
+    const saveText = document.getElementById("save-text");
+    const photoUpload = document.getElementById("photo-upload") as HTMLInputElement | null;
+    const previewContainer = document.getElementById("upload-preview");
+
+    let isDirty = false;
+    const currentYear = new Date().getFullYear();
+
+    function markDirty() {
+        isDirty = true;
+    }
+
+    function setSaveState(state: "idle" | "sending" | "error") {
+        if (!saveButton || !saveSpinner || !saveText) return;
+        if (state === "sending") {
+            saveButton.disabled = true;
+            saveSpinner.classList.remove("hidden");
+            saveText.textContent = "Guardando…";
+        } else if (state === "error") {
+            saveButton.disabled = false;
+            saveSpinner.classList.add("hidden");
+            saveText.textContent = "Reintentar";
+        } else {
+            saveButton.disabled = false;
+            saveSpinner.classList.add("hidden");
+            saveText.textContent = "Guardar cambios";
+        }
+    }
+
+    function showFieldError(input: HTMLInputElement | HTMLTextAreaElement, message: string) {
+        input.classList.add("border-danger", "focus:border-danger", "focus:ring-danger/30");
+        input.classList.remove("focus:border-brand-500", "focus:ring-brand-200");
+        const group = input.closest(".field-group");
+        const error = group?.querySelector(".error-message") as HTMLElement | null;
+        if (error) {
+            error.textContent = message;
+            error.classList.remove("hidden");
+        }
+    }
+
+    function clearFieldError(input: HTMLInputElement | HTMLTextAreaElement) {
+        input.classList.remove("border-danger", "focus:border-danger", "focus:ring-danger/30");
+        input.classList.add("focus:border-brand-500", "focus:ring-brand-200");
+        const group = input.closest(".field-group");
+        const error = group?.querySelector(".error-message") as HTMLElement | null;
+        if (error) {
+            error.textContent = "";
+            error.classList.add("hidden");
+        }
+    }
+
+    function validateForm(): boolean {
+        if (!form) return false;
+        let firstInvalid: HTMLElement | null = null;
+        let valid = true;
+
+        const requiredIds = ["name", "model", "year", "mileage", "traction", "fuel_type", "transmission_type", "engine_type"];
+
+        requiredIds.forEach((id) => {
+            const input = form.querySelector(`#${id}`) as HTMLInputElement | HTMLTextAreaElement | null;
+            if (!input) return;
+            clearFieldError(input);
+            if (!input.value.trim()) {
+                showFieldError(input, "Este campo es obligatorio");
+                valid = false;
+                if (!firstInvalid) firstInvalid = input;
+            }
+        });
+
+        const yearInput = form.querySelector("#year") as HTMLInputElement | null;
+        if (yearInput && yearInput.value.trim()) {
+            const year = parseInt(yearInput.value, 10);
+            if (isNaN(year) || year < 1950 || year > currentYear + 1) {
+                showFieldError(yearInput, `El año debe estar entre 1950 y ${currentYear + 1}`);
+                valid = false;
+                if (!firstInvalid) firstInvalid = yearInput;
+            }
+        }
+
+        if (firstInvalid) {
+            firstInvalid.scrollIntoView({ behavior: "smooth", block: "center" });
+            firstInvalid.focus();
+        }
+
+        return valid;
+    }
+
+    function buildFormData(): FormData {
+        const data = new FormData();
+        if (!form) return data;
+
+        data.append("name", (form.querySelector("#name") as HTMLInputElement)?.value ?? "");
+        data.append("model", (form.querySelector("#model") as HTMLInputElement)?.value ?? "");
+        data.append("description", (form.querySelector("#description") as HTMLTextAreaElement)?.value ?? "");
+        data.append("year", (form.querySelector("#year") as HTMLInputElement)?.value ?? "");
+        data.append("is_used", (form.querySelector("#is_used") as HTMLInputElement)?.checked ? "true" : "");
+        data.append("published", (form.querySelector("#published") as HTMLInputElement)?.checked ? "true" : "");
+
+        data.append("mileage", (form.querySelector("#mileage") as HTMLInputElement)?.value ?? "");
+        data.append("traction", (form.querySelector("#traction") as HTMLInputElement)?.value ?? "");
+        data.append("fuel_type", (form.querySelector("#fuel_type") as HTMLInputElement)?.value ?? "");
+        data.append("transmission_type", (form.querySelector("#transmission_type") as HTMLInputElement)?.value ?? "");
+        data.append("fuel_tank_capacity_liters", (form.querySelector("#fuel_tank_capacity_liters") as HTMLInputElement)?.value ?? "");
+        data.append("engine_type", (form.querySelector("#engine_type") as HTMLInputElement)?.value ?? "");
+
+        const featureNames = ["parking_assist", "push_button_start", "remote_locking", "connectivity", "satellite_navigation", "screens", "panoramic_roof", "air_conditioning", "fog_lights", "bluetooth"];
+        featureNames.forEach((name) => {
+            data.append(name, (form.querySelector(`[name="${name}"]`) as HTMLInputElement)?.checked ? "true" : "");
+        });
+
+        // Fotos existentes
+        form.querySelectorAll<HTMLElement>(".photo-item:not(.removed)").forEach((item) => {
+            const url = item.getAttribute("data-photo-url");
+            if (url) data.append("photos[]", url);
+        });
+
+        // Fotos nuevas
+        if (photoUpload?.files) {
+            Array.from(photoUpload.files).forEach((file) => {
+                data.append("new-photos", file);
+            });
+        }
+
+        return data;
+    }
+
+    async function saveAll() {
+        if (!form) return;
+        const id = form.getAttribute("data-car-id");
+        if (!id) return;
+
+        setSaveState("sending");
+
+        const data = buildFormData();
+
+        try {
+            const [carRes, infoRes, photosRes] = await Promise.all([
+                fetch(`/api/cars/update?id=${id}`, { method: "POST", body: data }),
+                fetch(`/api/info/update?id=${id}`, { method: "POST", body: data }),
+                fetch(`/api/photos/update?id=${id}`, { method: "POST", body: data }),
+            ]);
+
+            if (carRes.ok && infoRes.ok && photosRes.ok) {
+                isDirty = false;
+                setSaveState("idle");
+                if (typeof window.showToast === "function") {
+                    window.showToast("Cambios guardados", "success");
+                }
+            } else {
+                let message = "No se pudieron guardar los cambios";
+                try {
+                    const photosJson = await photosRes.json();
+                    if (photosJson.message) message = photosJson.message;
+                } catch {
+                    const text = await carRes.text();
+                    if (text) message = text;
+                }
+                setSaveState("error");
+                if (typeof window.showToast === "function") {
+                    window.showToast(message, "error");
+                }
+            }
+        } catch (error) {
+            console.error(error);
+            setSaveState("error");
+            if (typeof window.showToast === "function") {
+                window.showToast("No se pudieron guardar los cambios", "error");
+            }
+        }
+    }
+
+    form?.querySelectorAll("input, textarea, select").forEach((el) => {
+        el.addEventListener("input", markDirty);
+        el.addEventListener("change", markDirty);
     });
 
-    QR.append(qr_form.querySelector("#car-qr") as HTMLElement);
-
-    const forms = document.querySelectorAll(
-        "form",
-    ) as NodeListOf<HTMLFormElement>;
-
-    forms.forEach((form) => {
-        form.addEventListener("submit", async (e: SubmitEvent) => {
-            e.preventDefault();
-
-            const form_actual = e.target as HTMLFormElement;
-            const data = new FormData(form_actual);
-
-            const url = form_actual.getAttribute("action");
-            const id = form_actual.getAttribute("car-id");
-
-            if (!url || !id) {
-                console.error(
-                    "No se pudo determinar la URL o el ID del formulario.",
-                );
-                alert("Error al enviar el formulario: Datos incompletos.");
-                return;
-            }
-
-            try {
-                const response = await fetch(`${url}?id=${id}`, {
-                    method: "POST",
-                    body: data,
-                });
-
-                if (response.ok) {
-                    alert("Actualización exitosa.");
-                    window.location.reload(); // Recarga la página
-                } else {
-                    const errorData = await response.json();
-                    alert(
-                        `Error al actualizar: ${errorData.message || "Error desconocido."}`,
-                    );
+    form?.querySelectorAll("input, textarea").forEach((input) => {
+        if (input instanceof HTMLInputElement || input instanceof HTMLTextAreaElement) {
+            input.addEventListener("blur", () => {
+                clearFieldError(input);
+                if (!input.value.trim() && input.hasAttribute("required")) {
+                    showFieldError(input, "Este campo es obligatorio");
                 }
-            } catch (error) {
-                console.error("Error al enviar la solicitud:", error);
-                alert("Hubo un problema al procesar la solicitud.");
+                if (input.id === "year" && input.value.trim()) {
+                    const year = parseInt(input.value, 10);
+                    if (isNaN(year) || year < 1950 || year > currentYear + 1) {
+                        showFieldError(input, `El año debe estar entre 1950 y ${currentYear + 1}`);
+                    }
+                }
+            });
+        }
+    });
+
+    form?.addEventListener("submit", (e) => {
+        e.preventDefault();
+        clearAllErrors();
+        if (!validateForm()) {
+            if (typeof window.showToast === "function") {
+                window.showToast("Revisá los campos marcados", "error");
+            }
+            return;
+        }
+        saveAll();
+    });
+
+    function clearAllErrors() {
+        form?.querySelectorAll("input, textarea").forEach((input) => {
+            if (input instanceof HTMLInputElement || input instanceof HTMLTextAreaElement) {
+                clearFieldError(input);
+            }
+        });
+    }
+
+    // Previsualización de fotos nuevas
+    photoUpload?.addEventListener("change", () => {
+        markDirty();
+        if (!previewContainer || !photoUpload.files) return;
+        previewContainer.innerHTML = "";
+        Array.from(photoUpload.files).forEach((file) => {
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                const div = document.createElement("div");
+                div.className = "relative overflow-hidden rounded-radius-card border border-border bg-background";
+                div.innerHTML = `
+                    <img src="${ev.target?.result}" alt="Vista previa" class="h-32 w-full object-cover sm:h-36" />
+                    <span class="absolute bottom-2 left-2 rounded-radius-pill bg-brand-500 px-2 py-0.5 text-xs font-semibold text-white">Nueva</span>
+                `;
+                previewContainer.appendChild(div);
+            };
+            reader.readAsDataURL(file);
+        });
+    });
+
+    // Acciones de fotos (UI preparatoria)
+    form?.querySelectorAll<HTMLElement>("[data-action=\"set-main\"]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+            markDirty();
+            form.querySelectorAll(".photo-item span").forEach((badge) => badge.remove());
+            const item = btn.closest(".photo-item");
+            const badge = document.createElement("span");
+            badge.className = "absolute bottom-2 left-2 rounded-radius-pill bg-success px-2 py-0.5 text-xs font-semibold text-white";
+            badge.textContent = "Principal";
+            item?.appendChild(badge);
+            if (typeof window.showToast === "function") {
+                window.showToast("Marcada como foto principal", "success");
             }
         });
     });
+
+    form?.querySelectorAll<HTMLElement>("[data-action=\"remove-photo\"]").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+            const item = btn.closest(".photo-item");
+            if (!item) return;
+
+            if (typeof window.confirmModal === "function") {
+                const ok = await window.confirmModal({
+                    title: "¿Eliminar esta foto?",
+                    message: "Esta acción no se puede deshacer.",
+                    confirmText: "Eliminar",
+                    danger: true,
+                });
+                if (!ok) return;
+            } else if (!confirm("¿Eliminar esta foto?")) {
+                return;
+            }
+
+            item.classList.add("removed");
+            (item as HTMLElement).style.display = "none";
+            markDirty();
+            if (typeof window.showToast === "function") {
+                window.showToast("Foto eliminada de la vista previa", "success");
+            }
+        });
+    });
+
+    // Confirmación al salir con cambios sin guardar
+    window.addEventListener("beforeunload", (e) => {
+        if (!isDirty) return;
+        e.preventDefault();
+    });
 </script>
 
-<style lang="scss">
-    // General
-    body {
-        font-family: "Poppins", sans-serif;
-        background-color: #f8f9fa;
-        color: #343a40;
-    }
 
-    * {
-        box-sizing: border-box;
-    }
-
-    label img {
-        max-width: 100px;
-        border-radius: 10px;
-    }
-
-    .form-section {
-        margin: 5vh auto;
-        padding: 20px;
-        background-color: #f3f3f3;
-        border-radius: 8px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-        max-width: 800px;
-    }
-
-    // Fieldsets y legends
-    fieldset {
-        border: 1px solid #ced4da;
-        border-radius: 8px;
-        padding: 15px;
-        margin-bottom: 20px;
-    }
-
-    legend {
-        font-size: 1.2rem;
-        font-weight: 600;
-        color: #495057;
-        margin-bottom: 10px;
-    }
-
-    input[type="file"] {
-        display: block;
-        margin-bottom: 10px;
-        font-size: 1rem;
-        padding: 10px;
-        border: 1px solid #ced4da;
-        border-radius: 4px;
-        background-color: #f8f9fa;
-        cursor: pointer;
-        max-width: min-content;
-    }
-
-    // Inputs y botones
-    input[type="text"],
-    input[type="number"],
-    textarea {
-        width: 100%;
-        padding: 10px;
-        margin-top: 8px;
-        margin-bottom: 16px;
-        border: 1px solid #ced4da;
-        border-radius: 4px;
-        background-color: #e9ecef;
-        box-sizing: border-box;
-    }
-
-    button {
-        background-color: #007bff;
-        color: white;
-        border: none;
-        padding: 10px 15px;
-        border-radius: 5px;
-        cursor: pointer;
-        font-size: 1rem;
-        transition: background-color 0.3s ease;
-
-        &:hover {
-            background-color: #0056b3;
-        }
-    }
-
-    .add-photo-btn {
-        margin-top: 10px;
-        background-color: #28a745;
-        &:hover {
-            background-color: #218838;
-        }
-    }
-
-    .note {
-        font-size: 0.9rem;
-        color: #6c757d;
-    }
-
-    @media (max-width: 768px) {
-        .form-section {
-            padding: 15px;
-        }
-    }
-
-    .edit-button {
-        text-decoration: none;
-        position: fixed;
-        bottom: 2rem; /* Espacio desde el borde inferior */
-        right: 2rem; /* Espacio desde el borde derecho */
-        background-color: #e4e4e4;
-        color: #fff; /* Color del texto (blanco) */
-        font-size: 1.5rem; /* Tamaño del emoji */
-        width: 3.5rem; /* Ancho del botón */
-        height: 3.5rem; /* Alto del botón */
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        border-radius: 50%; /* Hace el botón circular */
-        box-shadow: 0px 0px 10px rgba(0, 0, 0, 1); /* Sombra suave */
-        cursor: pointer; /* Cambia el cursor a mano al pasar el mouse */
-        transition:
-            transform 0.3s ease,
-            box-shadow 0.3s ease;
-        z-index: 1000; /* Asegura que esté sobre otros elementos */
-    }
-
-    .edit-button:hover {
-        transform: scale(
-            1.1
-        ); /* Aumenta ligeramente el tamaño al pasar el mouse */
-        box-shadow: 0 8px 12px rgba(0, 0, 0, 0.3); /* Sombra más intensa al pasar el mouse */
-    }
-
-    .edit-button:active {
-        transform: scale(0.95); /* Reduce el tamaño al hacer clic */
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Sombra más pequeña */
-    }
-</style>

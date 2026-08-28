@@ -1,5 +1,4 @@
 ---
-import CardList from "@/components/CardList.astro";
 import Layout from "@/layouts/Layout.astro";
 import { list_cars_with_main_photo } from "@db/cars";
 
@@ -8,109 +7,274 @@ if (!Astro.locals.user) {
 }
 
 const user = Astro.locals.user;
-
 const items = await list_cars_with_main_photo(false);
 ---
 
-<Layout>
-    <main class="panel">
-        <h1>Bienvenido, {user.name} 👋</h1>
-        <section class="panel-content">
-            <button id="logout">Cerrar sesión</button>
-            <button id="register-new-vehicle"
-                >Registrar un nuevo vehículo</button
+<Layout title="Panel de administración" showFab={false}>
+    <main class="mx-auto min-h-[70vh] max-w-7xl px-4 py-8 lg:px-8">
+        <header class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+                <h1 class="font-display text-2xl font-semibold text-text">
+                    Bienvenido, {user.name}
+                </h1>
+                <p class="mt-1 text-sm text-text-secondary">
+                    Gestión de vehículos
+                </p>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-3">
+                <a
+                    href="/"
+                    class="inline-flex items-center justify-center rounded-radius-card border border-border bg-surface px-4 py-2 text-sm font-semibold text-text transition hover:bg-accent-soft"
+                >
+                    Ver sitio
+                </a>
+                <button
+                    id="logout"
+                    type="button"
+                    class="inline-flex items-center justify-center rounded-radius-card border border-border bg-surface px-4 py-2 text-sm font-semibold text-text transition hover:bg-accent-soft"
+                >
+                    Cerrar sesión
+                </button>
+                <button
+                    id="register-new-vehicle"
+                    type="button"
+                    class="inline-flex items-center justify-center rounded-radius-card bg-brand-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-600 disabled:opacity-60"
+                >
+                    <span id="register-text">Registrar vehículo</span>
+                    <svg
+                        id="register-spinner"
+                        class="ml-2 hidden h-4 w-4 animate-spin"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        aria-hidden="true"
+                    >
+                        <circle
+                            class="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            stroke-width="4"
+                        ></circle>
+                        <path
+                            class="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                        ></path>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <section aria-labelledby="vehicle-list-title">
+            <h2
+                id="vehicle-list-title"
+                class="mb-4 font-display text-lg font-semibold text-text"
             >
-            <div id="response-box" style="margin-top: 20px;"></div>
+                Vehículos ({items.length})
+            </h2>
+
+            <!-- Desktop tabla -->
+            <div class="hidden overflow-hidden rounded-radius-card border border-border bg-surface shadow-card md:block">
+                <table class="w-full text-left text-sm">
+                    <thead class="bg-accent-soft">
+                        <tr>
+                            <th class="px-4 py-3 font-semibold text-text">Nombre</th>
+                            <th class="px-4 py-3 font-semibold text-text">Año</th>
+                            <th class="px-4 py-3 font-semibold text-text">Estado</th>
+                            <th class="px-4 py-3 font-semibold text-text text-right">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="panel-table-body" class="divide-y divide-border">
+                        {
+                            items.map(({ car }) => (
+                                <tr data-car-id={car.id} data-car-name={`${car.name} ${car.model}`}>
+                                    <td class="px-4 py-3 font-medium text-text">
+                                        {car.name} {car.model}
+                                    </td>
+                                    <td class="px-4 py-3 text-text-secondary">{car.year}</td>
+                                    <td class="px-4 py-3">
+                                        {car.published ? (
+                                            <span class="inline-flex rounded-radius-pill bg-success/10 px-2.5 py-1 text-xs font-semibold text-success">
+                                                Publicado
+                                            </span>
+                                        ) : (
+                                            <span class="inline-flex rounded-radius-pill bg-text-secondary/10 px-2.5 py-1 text-xs font-semibold text-text-secondary">
+                                                No publicado
+                                            </span>
+                                        )}
+                                    </td>
+                                    <td class="px-4 py-3 text-right">
+                                        <div class="flex items-center justify-end gap-2">
+                                            <a
+                                                href={`/autos/edit?id=${car.id}`}
+                                                class="inline-flex items-center gap-1 rounded-radius-card border border-border px-3 py-1.5 text-xs font-semibold text-text transition hover:bg-accent-soft"
+                                            >
+                                                Editar
+                                            </a>
+                                            <button
+                                                type="button"
+                                                data-action="delete"
+                                                class="inline-flex items-center gap-1 rounded-radius-card bg-danger px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-danger/90"
+                                            >
+                                                Eliminar
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Mobile tarjetas -->
+            <div class="grid grid-cols-1 gap-4 md:hidden" id="panel-cards">
+                {
+                    items.map(({ car }) => (
+                        <article
+                            class="rounded-radius-card border border-border bg-surface p-4 shadow-card"
+                            data-car-id={car.id}
+                            data-car-name={`${car.name} ${car.model}`}
+                        >
+                            <div class="flex items-start justify-between gap-3">
+                                <div>
+                                    <h3 class="font-display text-base font-semibold text-text">
+                                        {car.name} {car.model}
+                                    </h3>
+                                    <p class="mt-1 text-sm text-text-secondary">Año {car.year}</p>
+                                </div>
+                                {car.published ? (
+                                    <span class="inline-flex rounded-radius-pill bg-success/10 px-2.5 py-1 text-xs font-semibold text-success">
+                                        Publicado
+                                    </span>
+                                ) : (
+                                    <span class="inline-flex rounded-radius-pill bg-text-secondary/10 px-2.5 py-1 text-xs font-semibold text-text-secondary">
+                                        No publicado
+                                    </span>
+                                )}
+                            </div>
+
+                            <div class="mt-4 flex items-center gap-2">
+                                <a
+                                    href={`/autos/edit?id=${car.id}`}
+                                    class="inline-flex flex-1 items-center justify-center rounded-radius-card border border-border bg-surface px-3 py-2 text-sm font-semibold text-text transition hover:bg-accent-soft"
+                                >
+                                    Editar
+                                </a>
+                                <button
+                                    type="button"
+                                    data-action="delete"
+                                    class="inline-flex flex-1 items-center justify-center rounded-radius-card bg-danger px-3 py-2 text-sm font-semibold text-white transition hover:bg-danger/90"
+                                >
+                                    Eliminar
+                                </button>
+                            </div>
+                        </article>
+                    ))
+                }
+            </div>
         </section>
-        <CardList items={items} />
     </main>
 
     <script>
-        // Manejo de cierre de sesión
-        document
-            .querySelector("button#logout")
-            ?.addEventListener("click", function handleLogout() {
-                window.location.href = "/api/logout";
-            });
+        function setRegisterLoading(loading: boolean) {
+            const btn = document.getElementById("register-new-vehicle") as HTMLButtonElement | null;
+            const spinner = document.getElementById("register-spinner");
+            const text = document.getElementById("register-text");
+            if (btn) btn.disabled = loading;
+            if (spinner) spinner.classList.toggle("hidden", !loading);
+            if (text) text.textContent = loading ? "Registrando…" : "Registrar vehículo";
+        }
 
-        // Botón para registrar un nuevo vehículo
-        document
-            .querySelector("button#register-new-vehicle")
-            ?.addEventListener("click", async function handleRegister() {
-                const responseBox = document.querySelector("#response-box")!;
-                responseBox.textContent = "Procesando...";
+        document.getElementById("logout")?.addEventListener("click", () => {
+            if (typeof window.showToast === "function") {
+                window.showToast("Sesión cerrada", "neutral");
+            }
+            window.location.href = "/api/logout";
+        });
 
-                try {
-                    // Realizar la petición POST
-                    const response = await fetch("/api/autos/nuevo", {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json",
-                        },
-                        body: JSON.stringify({}), // Puedes incluir datos aquí si es necesario
-                    });
+        document.getElementById("register-new-vehicle")?.addEventListener("click", async () => {
+            setRegisterLoading(true);
+            try {
+                const response = await fetch("/api/autos/nuevo", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({}),
+                });
 
-                    if (response.ok) {
-                        const data = await response.json();
-                        if (data.link) {
-                            responseBox.innerHTML = `
-                                <div style="padding: 10px; background: #e0f7e9; border: 1px solid #a8e6a2; border-radius: 4px;">
-                                    <strong>¡Éxito!</strong> Nuevo vehículo registrado. Visita: 
-                                    <a href="${data.link}" target="_blank">${data.link}</a>
-                                </div>`;
-                        } else {
-                            responseBox.innerHTML = `
-                                <div style="padding: 10px; background: rgba(255, 179, 0, .3); border: 1px solid #8A6E00; border-radius: 4px;">
-                                    <strong>¡Éxito!</strong> Nuevo vehículo registrado, pero no se recibió un enlace.
-                                </div>`;
-                        }
-                    } else {
-                        responseBox.innerHTML = `
-                            <div style="padding: 10px; background: #fce4e4; border: 1px solid #f5c6cb; border-radius: 4px;">
-                                <strong>Error:</strong> No se pudo registrar el vehículo. Inténtalo de nuevo.
-                            </div>`;
+                if (response.ok) {
+                    const data = await response.json();
+                    if (typeof window.showToast === "function") {
+                        window.showToast("Nuevo vehículo registrado", "success");
                     }
-                } catch (error) {
-                    console.error("Error en la solicitud:", error);
-                    responseBox.innerHTML = `
-                        <div style="padding: 10px; background: #fce4e4; border: 1px solid #f5c6cb; border-radius: 4px;">
-                            <strong>Error:</strong> Ocurrió un problema al procesar la solicitud.
-                        </div>`;
+                    if (data.link) {
+                        setTimeout(() => {
+                            window.location.href = data.link;
+                        }, 800);
+                    } else {
+                        setTimeout(() => window.location.reload(), 800);
+                    }
+                } else {
+                    if (typeof window.showToast === "function") {
+                        window.showToast("No se pudo registrar el vehículo", "error");
+                    }
+                    setRegisterLoading(false);
+                }
+            } catch (error) {
+                console.error("Error en la solicitud:", error);
+                if (typeof window.showToast === "function") {
+                    window.showToast("Ocurrió un problema al registrar", "error");
+                }
+                setRegisterLoading(false);
+            }
+        });
+
+        async function deleteCar(id: string) {
+            try {
+                const response = await fetch(`/api/cars/delete?id=${id}`, { method: "DELETE" });
+                if (response.ok) {
+                    if (typeof window.showToast === "function") {
+                        window.showToast("Auto eliminado", "success");
+                    }
+                    document
+                        .querySelectorAll(`[data-car-id="${id}"]`)
+                        .forEach((el) => el.remove());
+                } else {
+                    if (typeof window.showToast === "function") {
+                        window.showToast("No se pudo eliminar el auto", "error");
+                    }
+                }
+            } catch (error) {
+                console.error("Error al eliminar:", error);
+                if (typeof window.showToast === "function") {
+                    window.showToast("Error al eliminar el auto", "error");
+                }
+            }
+        }
+
+        document.querySelectorAll("[data-action=\"delete\"]").forEach((btn) => {
+            btn.addEventListener("click", async () => {
+                const item = btn.closest("[data-car-id]");
+                const id = item?.getAttribute("data-car-id");
+                const name = item?.getAttribute("data-car-name") || "este auto";
+                if (!id) return;
+
+                if (typeof window.confirmModal === "function") {
+                    const ok = await window.confirmModal({
+                        title: `¿Eliminar ${name}?`,
+                        message: `Se eliminarán también sus fotos y ficha técnica. Esta acción no se puede deshacer.`,
+                        confirmText: "Eliminar",
+                        danger: true,
+                    });
+                    if (ok) deleteCar(id);
+                } else {
+                    const ok = confirm(`¿Eliminar ${name}?`);
+                    if (ok) deleteCar(id);
                 }
             });
+        });
     </script>
 </Layout>
-
-<style lang="scss">
-    .panel {
-        margin: 10vw auto;
-        padding: 20px;
-        text-align: center;
-        font-family: Arial, sans-serif;
-    }
-
-    .panel-content {
-        margin-top: 20px;
-        padding: 10px;
-        background: transparent;
-        border-radius: 8px;
-    }
-
-    button {
-        background: #007bff;
-        color: white;
-        border: none;
-        padding: 10px 20px;
-        font-size: 16px;
-        border-radius: 4px;
-        cursor: pointer;
-        transition: background 0.3s;
-
-        margin-left: 4px;
-        margin-top: 4px;
-    }
-
-    button:hover {
-        background: #0056b3;
-    }
-</style>

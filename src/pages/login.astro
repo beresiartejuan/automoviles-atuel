@@ -1,177 +1,165 @@
 ---
-import Navbar from "../components/Navbar.astro";
+import Layout from "@/layouts/Layout.astro";
 ---
 
-<!doctype html>
-<html lang="es">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Login</title>
-    </head>
-    <body>
-        <Navbar />
-        <form class="login" action="/login" method="POST">
-            <h1>Iniciar Sesión</h1>
-            <div class="form-group">
-                <label for="username">Usuario</label>
+<Layout title="Iniciar sesión" showFab={false}>
+    <main class="flex min-h-[80vh] items-center justify-center px-4 py-12">
+        <form
+            class="login w-full max-w-md space-y-6 rounded-radius-card bg-surface p-6 shadow-card sm:p-8"
+            action="/login"
+            method="POST"
+        >
+            <h1 class="text-center font-display text-2xl font-semibold text-text">
+                Iniciar Sesión
+            </h1>
+
+            <div class="space-y-2">
+                <label
+                    for="username"
+                    class="block text-sm font-semibold text-text"
+                >
+                    Usuario
+                </label>
                 <input
                     type="text"
                     id="username"
                     name="username"
                     placeholder="Tu usuario"
                     required
+                    class="w-full rounded-radius-card border border-border bg-background px-4 py-3 text-text outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-200"
                 />
             </div>
-            <div class="form-group">
-                <label for="password">Contraseña</label>
+
+            <div class="space-y-2">
+                <label
+                    for="password"
+                    class="block text-sm font-semibold text-text"
+                >
+                    Contraseña
+                </label>
                 <input
                     type="password"
                     id="password"
                     name="password"
                     placeholder="Tu contraseña"
                     required
+                    class="w-full rounded-radius-card border border-border bg-background px-4 py-3 text-text outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-200"
                 />
             </div>
-            <button type="submit" class="login-button">Ingresar</button>
-            <p class="response-message" id="responseMessage"></p>
+
+            <button
+                type="submit"
+                id="login-button"
+                class="inline-flex w-full items-center justify-center rounded-radius-card bg-brand-500 px-6 py-3 text-base font-semibold text-white transition hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+                <span id="login-button-text">Ingresar</span>
+                <svg
+                    id="login-spinner"
+                    class="ml-2 hidden h-5 w-5 animate-spin text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                >
+                    <circle
+                        class="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        stroke-width="4"
+                    ></circle>
+                    <path
+                        class="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                    ></path>
+                </svg>
+            </button>
+
+            <p
+                id="responseMessage"
+                class="hidden text-center text-sm font-medium text-danger"
+                role="alert"
+            >
+                Usuario o contraseña incorrectos.
+            </p>
         </form>
-    </body>
-</html>
+    </main>
+</Layout>
 
 <script>
-    const login: HTMLFormElement | null = document.querySelector("form.login");
-    const responseMessage = document.getElementById("responseMessage")!;
+    const login = document.querySelector("form.login") as HTMLFormElement | null;
+    const responseMessage = document.getElementById(
+        "responseMessage",
+    ) as HTMLParagraphElement | null;
+    const loginButton = document.getElementById(
+        "login-button",
+    ) as HTMLButtonElement | null;
+    const loginButtonText = document.getElementById(
+        "login-button-text",
+    ) as HTMLSpanElement | null;
+    const loginSpinner = document.getElementById(
+        "login-spinner",
+    ) as HTMLElement | null;
 
-    document.addEventListener("DOMContentLoaded", () => {
-        if (!login) {
-            alert("La función de login no esta disponible por ahora");
-            return;
+    function setLoading(loading: boolean) {
+        if (loginButton) loginButton.disabled = loading;
+        if (loginSpinner) loginSpinner.classList.toggle("hidden", !loading);
+        if (loginButtonText)
+            loginButtonText.textContent = loading ? "Ingresando…" : "Ingresar";
+    }
+
+    function showError() {
+        if (responseMessage) {
+            responseMessage.classList.remove("hidden");
+            responseMessage.textContent = "Usuario o contraseña incorrectos";
         }
+    }
 
-        async function handleLogin(credentials: {
-            username: string;
-            password: string;
-        }): Promise<{ message: string; ok: boolean }> {
-            try {
-                const response = await fetch("/api/login", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(credentials),
-                });
+    async function handleLogin(credentials: {
+        username: string;
+        password: string;
+    }): Promise<{ ok: boolean; message: string }> {
+        try {
+            const response = await fetch("/api/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(credentials),
+            });
 
-                const data = await response.json();
-
-                return {
-                    ok: response.ok,
-                    message: data.message as string,
-                };
-            } catch (error) {
-                console.log(error);
-                return {
-                    message: "Error en el servidor",
-                    ok: false,
-                };
-            }
+            const data = await response.json();
+            return { ok: response.ok, message: data.message as string };
+        } catch (error) {
+            console.error(error);
+            return { ok: false, message: "Error en el servidor" };
         }
+    }
 
-        login.addEventListener("submit", async (e) => {
-            e.preventDefault();
+    login?.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        if (responseMessage) responseMessage.classList.add("hidden");
 
-            const data = new FormData(e.target as HTMLFormElement);
+        const data = new FormData(e.currentTarget as HTMLFormElement);
+        const payload = {
+            username: data.get("username")!.toString(),
+            password: data.get("password")!.toString(),
+        };
 
-            const payload = {
-                username: data.get("username")!.toString(),
-                password: data.get("password")!.toString(),
-            };
+        const response = await handleLogin(payload);
 
-            responseMessage.innerHTML = "Procesando...";
-            responseMessage.style.color = "blue";
+        setLoading(false);
 
-            const response = await handleLogin(payload);
-
-            responseMessage.textContent = response.message;
-            responseMessage.style.color = response.ok ? "green" : "red";
-
-            if (response.ok) {
-                setTimeout(() => {
-                    window.location.href = "/panel";
-                }, 500);
+        if (response.ok) {
+            if (typeof window.showToast === "function") {
+                window.showToast("Sesión iniciada", "success");
             }
-        });
+            setTimeout(() => {
+                window.location.href = "/panel";
+            }, 500);
+        } else {
+            showError();
+        }
     });
 </script>
-
-<style lang="scss">
-    body {
-        margin: 0;
-        font-family: Arial, sans-serif;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        min-height: 100vh;
-        background-color: #f0f2f5;
-    }
-
-    form.login {
-        width: 100%;
-        max-width: 400px;
-        display: flex;
-        flex-direction: column;
-        padding: 0 0.75rem;
-
-        * {
-            box-sizing: border-box;
-        }
-    }
-
-    h1 {
-        font-size: 2rem;
-        margin-bottom: 1.5rem;
-        color: #333;
-        text-align: center;
-        text-decoration: underline;
-    }
-
-    .form-group {
-        margin-bottom: 1.5rem;
-        width: 100%;
-    }
-
-    label {
-        display: block;
-        margin-bottom: 0.5rem;
-        color: #555;
-        font-weight: bold;
-    }
-
-    input {
-        padding: 0.75rem;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-        font-size: 1rem;
-        width: 100%;
-    }
-
-    input:focus {
-        outline: none;
-        border-color: #007bff;
-        box-shadow: 0 0 3px rgba(0, 123, 255, 1);
-    }
-
-    .login-button {
-        background-color: #007bff;
-        color: #fff;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        transition: background-color 0.3s;
-        font-size: 1.1rem;
-        padding: 0.75rem;
-        min-width: 100%;
-    }
-
-    .login-button:hover {
-        background-color: #0056b3;
-    }
-</style>

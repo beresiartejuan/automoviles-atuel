@@ -1,0 +1,128 @@
+---
+// Modal de confirmación. Se controla vía evento personalizado "confirmModal".
+// Uso: document.dispatchEvent(new CustomEvent("confirmModal", { detail: { title, message, onConfirm() } }));
+---
+
+<div
+    id="confirm-modal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="confirm-modal-title"
+    class="fixed inset-0 z-[110] hidden items-center justify-center bg-black/50 p-4"
+>
+    <div
+        class="w-full max-w-md transform rounded-radius-modal bg-surface p-6 shadow-card transition-all scale-95 opacity-0"
+        id="confirm-modal-box"
+    >
+        <h2
+            id="confirm-modal-title"
+            class="font-display text-lg font-semibold text-text"
+        >
+            Confirmar acción
+        </h2>
+        <p id="confirm-modal-message" class="mt-3 text-sm text-text-secondary">
+        </p>
+
+        <div class="mt-6 flex justify-end gap-3">
+            <button
+                id="confirm-modal-cancel"
+                type="button"
+                class="rounded-radius-card border border-border bg-surface px-4 py-2 text-sm font-semibold text-text transition hover:bg-accent-soft"
+            >
+                Cancelar
+            </button>
+            <button
+                id="confirm-modal-confirm"
+                type="button"
+                class="rounded-radius-card bg-danger px-4 py-2 text-sm font-semibold text-white transition hover:bg-danger/90"
+            >
+                Eliminar
+            </button>
+        </div>
+    </div>
+</div>
+
+<script is:inline>
+    (function () {
+        const overlay = document.getElementById("confirm-modal");
+        const box = document.getElementById("confirm-modal-box");
+        const title = document.getElementById("confirm-modal-title");
+        const message = document.getElementById("confirm-modal-message");
+        const cancelBtn = document.getElementById("confirm-modal-cancel");
+        const confirmBtn = document.getElementById("confirm-modal-confirm");
+
+        let currentResolve = null;
+
+        function open(config = {}) {
+            if (!overlay || !title || !message || !box) return Promise.resolve(false);
+
+            title.textContent = config.title || "Confirmar acción";
+            message.textContent = config.message || "¿Estás seguro?";
+            confirmBtn.textContent = config.confirmText || "Eliminar";
+
+            overlay.classList.remove("hidden");
+            overlay.classList.add("flex");
+            setTimeout(() => {
+                box.classList.remove("scale-95", "opacity-0");
+                box.classList.add("scale-100", "opacity-100");
+            }, 10);
+
+            confirmBtn.className = config.danger !== false
+                ? "rounded-radius-card bg-danger px-4 py-2 text-sm font-semibold text-white transition hover:bg-danger/90"
+                : "rounded-radius-card bg-brand-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-600";
+
+            return new Promise((resolve) => {
+                currentResolve = resolve;
+            });
+        }
+
+        function close(result) {
+            if (!overlay || !box) return;
+            box.classList.remove("scale-100", "opacity-100");
+            box.classList.add("scale-95", "opacity-0");
+            setTimeout(() => {
+                overlay.classList.add("hidden");
+                overlay.classList.remove("flex");
+                if (currentResolve) {
+                    currentResolve(result);
+                    currentResolve = null;
+                }
+            }, 200);
+        }
+
+        cancelBtn?.addEventListener("click", () => close(false));
+        confirmBtn?.addEventListener("click", () => close(true));
+
+        overlay?.addEventListener("click", (e) => {
+            if (e.target === overlay) close(false);
+        });
+
+        document.addEventListener("keydown", (e) => {
+            if (e.key === "Escape" && !overlay.classList.contains("hidden")) {
+                close(false);
+            }
+        });
+
+        document.addEventListener("confirmModal", async (e) => {
+            const ok = await open(e.detail);
+            if (ok && e.detail.onConfirm) {
+                e.detail.onConfirm();
+            }
+        });
+
+        window.confirmModal = open;
+    })();
+</script>
+
+<script>
+    declare global {
+        interface Window {
+            confirmModal: (config?: {
+                title?: string;
+                message?: string;
+                confirmText?: string;
+                danger?: boolean;
+            }) => Promise<boolean>;
+        }
+    }
+</script>

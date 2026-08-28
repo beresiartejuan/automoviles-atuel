@@ -1,0 +1,90 @@
+---
+// Toast global. Incluir una sola vez en Layout.astro para disponibilidad global.
+---
+
+<div
+    id="toast"
+    role="status"
+    aria-live="polite"
+    aria-atomic="true"
+    class="fixed right-4 top-4 z-[100] hidden max-w-sm translate-x-full transform items-start gap-3 rounded-radius-card bg-surface p-4 shadow-card transition-transform duration-300"
+>
+    <span id="toast-icon" aria-hidden="true" class="mt-0.5 text-xl"></span>
+    <div class="flex-1">
+        <p id="toast-message" class="text-sm font-medium text-text"></p>
+    </div>
+    <button
+        id="toast-close"
+        type="button"
+        aria-label="Cerrar notificación"
+        class="text-text-secondary transition hover:text-text"
+    >
+        ×
+    </button>
+</div>
+
+<script is:inline>
+    (function () {
+        const toast = document.getElementById("toast");
+        const messageEl = document.getElementById("toast-message");
+        const iconEl = document.getElementById("toast-icon");
+        const closeBtn = document.getElementById("toast-close");
+
+        let hideTimeout = null;
+
+        const icons = {
+            success: "✓",
+            error: "✕",
+            neutral: "ℹ",
+        };
+
+        const classes = {
+            success: "border-l-4 border-success",
+            error: "border-l-4 border-danger",
+            neutral: "border-l-4 border-brand-500",
+        };
+
+        function hide() {
+            if (!toast) return;
+            toast.classList.add("translate-x-full");
+            toast.classList.remove("flex");
+            toast.classList.add("hidden");
+        }
+
+        function show(text, variant = "neutral") {
+            if (!toast || !messageEl || !iconEl) return;
+
+            clearTimeout(hideTimeout);
+
+            messageEl.textContent = text;
+            iconEl.textContent = icons[variant] || icons.neutral;
+            toast.className =
+                "fixed right-4 top-4 z-[100] max-w-sm items-start gap-3 rounded-radius-card bg-surface p-4 shadow-card transition-transform duration-300 flex " +
+                (classes[variant] || classes.neutral);
+
+            // Force reflow to trigger transition
+            void toast.offsetWidth;
+            toast.classList.remove("translate-x-full");
+
+            if (variant !== "error") {
+                hideTimeout = setTimeout(hide, 4000);
+            }
+        }
+
+        closeBtn?.addEventListener("click", hide);
+
+        document.addEventListener("toast", (e) => {
+            show(e.detail.message, e.detail.variant);
+        });
+
+        window.showToast = show;
+    })();
+</script>
+
+<script>
+    declare global {
+        interface Window {
+            showToast: (message: string, variant?: "success" | "error" | "neutral") => void;
+        }
+    }
+</script>
