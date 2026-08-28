@@ -1,29 +1,25 @@
 ---
-import type { ICar } from "@db/models";
-import { first_photo_by_car_id } from "@/db/cars";
+import type { CarListItem } from "@db/cars";
 
-interface Props extends ICar {
-    loadImage?: boolean;
-}
+interface Props extends CarListItem {}
 
 const { props } = Astro;
 
-const photo =
-    props.loadImage !== false ? await first_photo_by_car_id(props.id) : null;
+const { car, mainPhotoUrl: photo } = props;
 ---
 
 <div
     class="card"
     role="article"
-    car-id={props.id}
-    aria-labelledby={`card-title-${props.id}`}
+    car-id={car.id}
+    aria-labelledby={`card-title-${car.id}`}
 >
     {
         photo ? (
             <div class="card__image">
                 <img
-                    src={photo?.photo_url}
-                    alt={`Imagen de ${props.name}, modelo ${props.model}`}
+                    src={photo}
+                    alt={`Imagen de ${car.name}, modelo ${car.model}`}
                     loading="lazy"
                 />
             </div>
@@ -33,13 +29,13 @@ const photo =
     }
 
     <div class="card__info">
-        <h4 id={`card-title-${props.id}`} class="card__info__title">
-            {props.name}
+        <h4 id={`card-title-${car.id}`} class="card__info__title">
+            {car.name}
         </h4>
         <p class="card__info__details">
-            <span class="card__info__model">{props.model} | {props.year}</span>
+            <span class="card__info__model">{car.model} | {car.year}</span>
             <span class="card__info__year-mileage">
-                {props.is_used ? "" : "0km"}
+                {car.is_used ? "" : "0km"}
             </span>
         </p>
     </div>

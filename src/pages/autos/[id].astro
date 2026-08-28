@@ -1,6 +1,6 @@
 ---
 import Layout from "@layouts/Layout.astro";
-import { get_all_by_car_id } from "@db/cars";
+import { get_full_car_by_id } from "@db/cars";
 import CardHeader from "@ui/CardHeader.astro";
 import CardInfo from "@ui/CardInfo.astro";
 import CardTech from "@ui/CardTech.astro";
@@ -14,7 +14,7 @@ if (!id) {
     return Astro.redirect("/");
 }
 
-const result = await get_all_by_car_id(id);
+const result = await get_full_car_by_id(id);
 
 if (!result) {
     return Astro.redirect("/");

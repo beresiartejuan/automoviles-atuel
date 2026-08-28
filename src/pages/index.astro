@@ -1,15 +1,15 @@
 ---
 import Layout from "@layouts/Layout.astro";
 import SearchBar from "@components/Search.astro";
-import { get_published_cars } from "@/db/cars";
+import { list_cars_with_main_photo } from "@/db/cars";
 import Header from "@/components/Header.astro";
 import CardList from "@/components/CardList.astro";
 
-const cars = await get_published_cars();
+const items = await list_cars_with_main_photo(true);
 ---
 
 <Layout>
 	<Header />
 	<SearchBar />
-	<CardList cars={cars} />
+	<CardList items={items} />
 </Layout>

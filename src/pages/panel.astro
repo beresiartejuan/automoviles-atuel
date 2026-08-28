@@ -1,7 +1,7 @@
 ---
 import CardList from "@/components/CardList.astro";
 import Layout from "@/layouts/Layout.astro";
-import { get_cars } from "@db/cars";
+import { list_cars_with_main_photo } from "@db/cars";
 
 if (!Astro.locals.user) {
     return Astro.redirect("/login");
@@ -9,7 +9,7 @@ if (!Astro.locals.user) {
 
 const user = Astro.locals.user;
 
-const cars = await get_cars();
+const items = await list_cars_with_main_photo(false);
 ---
 
 <Layout>
@@ -22,7 +22,7 @@ const cars = await get_cars();
             >
             <div id="response-box" style="margin-top: 20px;"></div>
         </section>
-        <CardList cars={cars} />
+        <CardList items={items} />
     </main>
 
     <script>

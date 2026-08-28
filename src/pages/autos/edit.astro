@@ -1,6 +1,6 @@
 ---
 import Layout from "@/layouts/Layout.astro";
-import { get_all_by_car_id } from "@/db/cars";
+import { get_full_car_by_id } from "@/db/cars";
 
 const id = Astro.url.searchParams.get("id");
 
@@ -14,7 +14,7 @@ if (!id) {
     return Astro.redirect("/404");
 }
 
-const result = await get_all_by_car_id(id);
+const result = await get_full_car_by_id(id);
 
 if (!result) {
     return Astro.redirect("/");

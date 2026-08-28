@@ -1,16 +1,16 @@
 ---
-import type { ICar } from "@/db/models";
+import type { CarListItem } from "@/db/cars";
 import Card from "./Card.astro";
 
 interface Props {
-    cars: ICar[];
+    items: CarListItem[];
 }
 
-const { cars } = Astro.props;
+const { items } = Astro.props;
 ---
 
 <section class="cards">
-    {cars.map((car) => <Card {...car} />)}
+    {items.map((item) => <Card {...item} />)}
 </section>
 
 <style lang="scss">

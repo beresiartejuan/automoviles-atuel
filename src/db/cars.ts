@@ -104,6 +104,66 @@ export const get_all_by_car_id = async (car_id: string) => {
     }
 };
 
+export interface FullCar {
+    car: ICar;
+    info: ICarInfo | null;
+    photos: ICarPhoto[];
+}
+
+export const get_full_car_by_id = async (id: string): Promise<FullCar | null> => {
+    const car = await get_car_by_id(id);
+    if (!car) return null;
+
+    const info = await get_car_info_by_car_id(id);
+    const photos = await get_photos_by_car_id(id);
+
+    return { car, info, photos };
+};
+
+export const get_main_photo_by_car_id = async (car_id: string): Promise<ICarPhoto | null> => {
+    const rows = await db
+        .select()
+        .from(carPhotos)
+        .where(eq(carPhotos.carId, car_id))
+        .orderBy(desc(carPhotos.isMain), asc(carPhotos.id))
+        .limit(1);
+    return rows[0] ? toCarPhoto(rows[0]) : null;
+};
+
+export interface CarListItem {
+    car: ICar;
+    mainPhotoUrl: string | null;
+}
+
+export const list_cars_with_main_photo = async (
+    publishedOnly: boolean,
+    q: string = "",
+    used: boolean | null = null
+): Promise<CarListItem[]> => {
+    let allCars: ICar[];
+    if (publishedOnly && (q || used !== null)) {
+        allCars = await search_published_cars(q, used);
+    } else if (publishedOnly) {
+        allCars = await get_published_cars();
+    } else {
+        allCars = await get_cars();
+    }
+
+    return Promise.all(
+        allCars.map(async (car) => ({
+            car,
+            mainPhotoUrl: (await get_main_photo_by_car_id(car.id))?.photo_url ?? null,
+        }))
+    );
+};
+
+export const set_main_photo = async (photoId: number, carId: string): Promise<void> => {
+    await db.transaction(async (tx) => {
+        await tx.update(carPhotos).set({ isMain: false }).where(eq(carPhotos.carId, carId));
+        await tx.update(carPhotos).set({ isMain: true }).where(eq(carPhotos.id, photoId));
+    });
+};
+
 // * INSERT METHODS
 
 export const insert_car = async (car: Omit<ICar, "created_at" | "updated_at">): Promise<void> => {
