@@ -3,6 +3,7 @@ import { getAdmins } from '@db/admins';
 import { compare } from "bcrypt";
 import jwt from "jsonwebtoken";
 import { customResponse, respondWithJson } from "@/helper/response";
+import { PRIVATE_KEY } from "astro:env/server";
 
 export const prerender = false;
 
@@ -31,7 +32,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     const sing = jwt.sign({
         name: user.name,
         id: user.id
-    }, import.meta.env.PRIVATE_KEY as string);
+    }, PRIVATE_KEY);
 
     cookies.set('authenticated', sing, {
         httpOnly: true,

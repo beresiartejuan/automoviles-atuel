@@ -1,9 +1,10 @@
 import type { APIRoute } from "astro";
 import { turso } from "@db/connection";
+import { IMGBB_KEY } from "astro:env/server";
 
 export const prerender = false;
 
-const API_KEY = import.meta.env.IMGBB_KEY;
+const API_KEY = IMGBB_KEY;
 
 export const POST: APIRoute = async ({ request, url, cookies }) => {
     if (!cookies.has("authenticated")) {
