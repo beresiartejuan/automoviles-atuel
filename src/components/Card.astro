@@ -6,122 +6,73 @@ interface Props extends CarListItem {}
 const { props } = Astro;
 
 const { car, mainPhotoUrl: photo } = props;
+
+const href = `/autos/${car.id}`;
+const badgeText = car.is_used ? "USADO" : "0KM";
+const badgeClasses = car.is_used
+    ? "bg-text-secondary/90 text-white"
+    : "bg-brand-500 text-white";
 ---
 
-<div
-    class="card"
-    role="article"
-    car-id={car.id}
+<article
+    class="group relative flex max-w-[18rem] flex-col overflow-hidden rounded-radius-card bg-surface shadow-card transition-all duration-300 ease-out hover:shadow-[0_8px_20px_rgba(0,0,0,0.45)] focus-within:shadow-[0_8px_20px_rgba(0,0,0,0.45)]"
     aria-labelledby={`card-title-${car.id}`}
 >
-    {
-        photo ? (
-            <div class="card__image">
-                <img
-                    src={photo}
-                    alt={`Imagen de ${car.name}, modelo ${car.model}`}
-                    loading="lazy"
-                />
-            </div>
-        ) : (
-            ""
-        )
-    }
+    <a href={href} class="contents" aria-label={`Ver detalle de ${car.name} ${car.model} ${car.year}`}>
+        <div class="relative aspect-[16/10] w-full overflow-hidden">
+            {
+                photo ? (
+                    <img
+                        src={photo}
+                        alt={`${car.name} ${car.model} ${car.year}`}
+                        class="h-full w-full object-cover transition-transform duration-300 ease-out group-hover:scale-105"
+                        loading="lazy"
+                    />
+                ) : (
+                    <div class="flex h-full w-full flex-col items-center justify-center bg-gray-200 text-text-secondary">
+                        <svg
+                            aria-hidden="true"
+                            class="mb-2 h-10 w-10"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="1.5"
+                        >
+                            <path d="M3 8l7.89 4.65a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                        <span class="font-sans text-sm">Sin fotos</span>
+                    </div>
+                )
+            }
 
-    <div class="card__info">
-        <h4 id={`card-title-${car.id}`} class="card__info__title">
-            {car.name}
-        </h4>
-        <p class="card__info__details">
-            <span class="card__info__model">{car.model} | {car.year}</span>
-            <span class="card__info__year-mileage">
-                {car.is_used ? "" : "0km"}
+            <span
+                class={`absolute left-3 top-3 rounded-radius-pill px-3 py-1 font-display text-xs font-semibold tracking-wide ${badgeClasses}`}
+            >
+                {badgeText}
             </span>
-        </p>
-    </div>
-</div>
+        </div>
 
-<script>
-    document.addEventListener("DOMContentLoaded", () => {
-        document.querySelectorAll("div.card[car-id]").forEach((card) => {
-            if (!card.getAttribute("car-id")) return;
+        <div class="flex flex-col gap-1 p-4">
+            <h4
+                id={`card-title-${car.id}`}
+                class="font-display text-lg font-semibold leading-tight text-text truncate"
+                title={`${car.name} ${car.model}`}
+            >
+                {car.name}
+            </h4>
+            <p class="font-sans text-sm text-text-secondary">
+                {car.model} · {car.year}
+            </p>
 
-            const car_id = card.getAttribute("car-id")!;
+            {/* Espacio reservado para precio cuando esté disponible */}
+            {/* <p class="font-display text-xl font-bold text-text mt-1">$ ...</p> */}
 
-            card.addEventListener("click", (e) => {
-                e.preventDefault();
-                window.location.href = `/autos/${car_id}`;
-            });
-        });
-    });
-</script>
-
-<style lang="scss">
-    :root {
-        --color-bg: #fff;
-        --color-shadow: rgba(0, 0, 0, 0.2);
-        --color-shadow-hover: #00000073;
-        --color-text: #333;
-        --color-muted: #888;
-        --color-button: #222425;
-        --color-button-hover: #0056b3;
-        --border-radius: 10px;
-        --spacing: 10px;
-    }
-
-    .card {
-        font-family: "Kanit", sans-serif;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        background-color: var(--color-bg);
-        border-radius: var(--border-radius);
-        box-shadow: 0 4px 10px var(--color-shadow);
-        max-width: 18rem;
-        overflow: hidden;
-        // cursor: pointer;
-        transition:
-            transform 0.3s ease,
-            box-shadow 0.3s ease;
-
-        &:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 20px var(--color-shadow-hover);
-        }
-
-        &__image img {
-            aspect-ratio: 1/1;
-            width: 100%;
-            height: auto;
-            object-fit: cover;
-            border-bottom: 1px solid #e0e0e0;
-        }
-
-        &__info {
-            padding: var(--spacing);
-            width: 100%;
-            text-align: center;
-
-            &__title {
-                font-size: 1.3rem;
-                font-weight: 600;
-                color: var(--color-text);
-                margin: var(--spacing) 0;
-            }
-
-            &__details {
-                font-size: 1rem;
-                color: var(--color-muted);
-                margin-bottom: var(--spacing);
-                font-weight: 300;
-                text-align: left;
-                padding-left: 5%;
-
-                span {
-                    display: block;
-                    line-height: 1.4rem;
-                }
-            }
-        }
-    }
-</style>
+            <span
+                class="mt-3 inline-flex items-center gap-1 font-sans text-sm font-medium text-brand-500 group-hover:text-brand-600 transition-colors"
+                aria-hidden="true"
+            >
+                Consultar <span aria-hidden="true">→</span>
+            </span>
+        </div>
+    </a>
+</article>
