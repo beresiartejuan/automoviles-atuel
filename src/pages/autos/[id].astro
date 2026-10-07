@@ -53,7 +53,16 @@ const features = [
 ].filter((item) => item.condition);
 ---
 
-<Layout title={`${car.name} ${car.model} ${car.year} | Automóviles Atuel`} showFab={false}>
+<Layout
+    title={`${car.name} ${car.model} ${car.year} | Automóviles Atuel`}
+    description={
+        car.description
+            ? car.description.slice(0, 160)
+            : `${car.is_used ? "Usado" : "0km"} - ${car.name} ${car.model} ${car.year} disponible en Automóviles Atuel, San Rafael, Mendoza. Consultá por WhatsApp.`
+    }
+    image={mainPhoto?.photo_url}
+    showFab={false}
+>
     <main class="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
         <nav aria-label="Breadcrumb" class="mb-4">
             <ol class="flex flex-wrap items-center gap-2 font-sans text-sm text-text-secondary">

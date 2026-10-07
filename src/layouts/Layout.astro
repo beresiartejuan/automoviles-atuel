@@ -17,10 +17,11 @@ import ConfirmModal from "@/components/ConfirmModal.astro";
 interface Props {
 	title?: string;
 	description?: string;
+	image?: string;
 	showFab?: boolean;
 }
 
-const { title, description, showFab = true } = Astro.props;
+const { title, description, image, showFab = true } = Astro.props;
 ---
 
 <!doctype html>
@@ -29,6 +30,7 @@ const { title, description, showFab = true } = Astro.props;
 		<Head
 			title={title ?? SITEWEB_TITLE}
 			description={description ?? SITEWEB_DESCRIPTION}
+			image={image}
 		/>
 	</head>
 	<body class="m-0 min-h-screen w-full font-sans">
