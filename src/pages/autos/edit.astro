@@ -364,7 +364,7 @@ const features = [
                 <h2 class="mb-4 font-display text-lg font-semibold text-text">
                     Código QR
                 </h2>
-                <div class="flex items-center justify-center rounded-radius-card bg-white p-4" id="car-qr" data-link={`${Astro.site}/autos/${car.id}`}></div>
+                <div class="flex items-center justify-center rounded-radius-card bg-white p-4" id="car-qr" data-link={new URL(`/autos/${car.id}`, Astro.site ?? Astro.url.origin).href}></div>
             </section>
 
             <!-- Acciones -->

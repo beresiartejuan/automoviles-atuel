@@ -1,6 +1,5 @@
 import type { APIRoute } from "astro";
 import { insert_car, insert_car_info } from "@db/cars";
-import { v4 as uuidv4 } from "uuid";
 
 export const prerender = false;
 
@@ -9,7 +8,7 @@ export const POST: APIRoute = async ({ cookies }) => {
         return new Response(JSON.stringify({ message: "Token is required" }), { status: 401 });
     }
 
-    const id = uuidv4();
+    const id = crypto.randomUUID();
 
     try {
         await insert_car({

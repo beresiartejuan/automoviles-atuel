@@ -8,7 +8,6 @@ import tailwindcss from '@tailwindcss/vite';
 export default defineConfig({
   adapter: vercel(),
   output: "server",
-  site: "http://localhost:1234",
   env: {
     schema: {
       TURSO_DATABASE_URL: envField.string({ context: "server", access: "secret" }),
